@@ -1,0 +1,196 @@
+{
+  "address": "DsUkNGcudGLMf7jMaqsuVcZfX3BDeLoQqnuCVTFrCXyh",
+  "metadata": {
+    "name": "zeeweg",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_marker",
+      "discriminator": [
+        55,
+        90,
+        160,
+        157,
+        0,
+        80,
+        79,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "marker_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "marker",
+          "type": {
+            "defined": {
+              "name": "MarkerData"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "MarkerAccount",
+      "discriminator": [
+        166,
+        174,
+        96,
+        127,
+        19,
+        33,
+        107,
+        222
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "MarkerAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": {
+                "name": "MarkerData"
+              }
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarkerData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "Position"
+              }
+            }
+          },
+          {
+            "name": "marker_type",
+            "type": {
+              "defined": {
+                "name": "MarkerType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarkerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Basic"
+          },
+          {
+            "name": "Park"
+          },
+          {
+            "name": "Beach"
+          },
+          {
+            "name": "MountainPeak"
+          },
+          {
+            "name": "Historical"
+          },
+          {
+            "name": "Restaurant"
+          },
+          {
+            "name": "Hotel"
+          },
+          {
+            "name": "Hospital"
+          },
+          {
+            "name": "Hazard"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Position",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lat",
+            "type": "i32"
+          },
+          {
+            "name": "lon",
+            "type": "i32"
+          }
+        ]
+      }
+    }
+  ]
+}
