@@ -49,7 +49,37 @@ export type Zeeweg = {
               },
               {
                 "kind": "arg",
-                "path": "marker.position"
+                "path": "marker.position.lat"
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position.lon"
+              }
+            ]
+          }
+        },
+        {
+          "name": "markerChunk",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  117,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position.tile(TILE_RESOLUTION).x"
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position.tile(TILE_RESOLUTION).y"
               }
             ]
           }
@@ -84,6 +114,26 @@ export type Zeeweg = {
         107,
         222
       ]
+    },
+    {
+      "name": "markerChunk",
+      "discriminator": [
+        197,
+        79,
+        67,
+        58,
+        109,
+        53,
+        25,
+        31
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "chunkFull",
+      "msg": "This tile chunk is full"
     }
   ],
   "types": [
@@ -97,7 +147,7 @@ export type Zeeweg = {
             "type": "pubkey"
           },
           {
-            "name": "data",
+            "name": "marker",
             "type": {
               "defined": {
                 "name": "markerData"
@@ -111,6 +161,28 @@ export type Zeeweg = {
           {
             "name": "updatedAt",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "markerChunk",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tile",
+            "type": {
+              "defined": {
+                "name": "tile"
+              }
+            }
+          },
+          {
+            "name": "markers",
+            "type": {
+              "vec": "pubkey"
+            }
           }
         ]
       }
@@ -184,6 +256,10 @@ export type Zeeweg = {
     },
     {
       "name": "position",
+      "docs": [
+        "Position represents a geographical point in WGS84 coordinate system",
+        "on the map using latitude and longitude in microdegrees ( degrees * 1e6)."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -193,6 +269,36 @@ export type Zeeweg = {
           },
           {
             "name": "lon",
+            "type": "i32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tile",
+      "docs": [
+        "Each tile represents a fixed-size square region on the map,",
+        "defined by a resolution in microdegrees (e.g. 100_000 = 0.1°).",
+        "",
+        "For example, given:",
+        "lat = 43160889 (43.160889°)",
+        "lon = -2934364 (-2.934364°)",
+        "and resolution = 100_000,",
+        "the resulting tile will be:",
+        "x = 43160889 / 100_000 = 431",
+        "y = -2934364 / 100_000 = -29",
+        "",
+        "This allows grouping markers spatially for fast region queries."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "x",
+            "type": "i32"
+          },
+          {
+            "name": "y",
             "type": "i32"
           }
         ]

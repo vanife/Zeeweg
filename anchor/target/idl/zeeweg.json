@@ -43,7 +43,37 @@
               },
               {
                 "kind": "arg",
-                "path": "marker.position"
+                "path": "marker.position.lat"
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position.lon"
+              }
+            ]
+          }
+        },
+        {
+          "name": "marker_chunk",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  117,
+                  110,
+                  107
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position.tile(TILE_RESOLUTION).x"
+              },
+              {
+                "kind": "arg",
+                "path": "marker.position.tile(TILE_RESOLUTION).y"
               }
             ]
           }
@@ -78,6 +108,26 @@
         107,
         222
       ]
+    },
+    {
+      "name": "MarkerChunk",
+      "discriminator": [
+        197,
+        79,
+        67,
+        58,
+        109,
+        53,
+        25,
+        31
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ChunkFull",
+      "msg": "This tile chunk is full"
     }
   ],
   "types": [
@@ -91,7 +141,7 @@
             "type": "pubkey"
           },
           {
-            "name": "data",
+            "name": "marker",
             "type": {
               "defined": {
                 "name": "MarkerData"
@@ -105,6 +155,28 @@
           {
             "name": "updated_at",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarkerChunk",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tile",
+            "type": {
+              "defined": {
+                "name": "Tile"
+              }
+            }
+          },
+          {
+            "name": "markers",
+            "type": {
+              "vec": "pubkey"
+            }
           }
         ]
       }
@@ -178,6 +250,10 @@
     },
     {
       "name": "Position",
+      "docs": [
+        "Position represents a geographical point in WGS84 coordinate system",
+        "on the map using latitude and longitude in microdegrees ( degrees * 1e6)."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -187,6 +263,36 @@
           },
           {
             "name": "lon",
+            "type": "i32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tile",
+      "docs": [
+        "Each tile represents a fixed-size square region on the map,",
+        "defined by a resolution in microdegrees (e.g. 100_000 = 0.1°).",
+        "",
+        "For example, given:",
+        "lat = 43160889 (43.160889°)",
+        "lon = -2934364 (-2.934364°)",
+        "and resolution = 100_000,",
+        "the resulting tile will be:",
+        "x = 43160889 / 100_000 = 431",
+        "y = -2934364 / 100_000 = -29",
+        "",
+        "This allows grouping markers spatially for fast region queries."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "x",
+            "type": "i32"
+          },
+          {
+            "name": "y",
             "type": "i32"
           }
         ]

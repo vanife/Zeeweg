@@ -1,11 +1,29 @@
 use anchor_lang::prelude::*;
 
+/// Position represents a geographical point in WGS84 coordinate system
+/// on the map using latitude and longitude in microdegrees ( degrees * 1e6).
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub struct Position {
-    // Microdegrees, degrees * 1e6
     pub lat: i32,
-    // Microdegrees, degrees * 1e6
     pub lon: i32,
+}
+
+/// Each tile represents a fixed-size square region on the map,
+/// defined by a resolution in microdegrees (e.g. 100_000 = 0.1°).
+///
+/// For example, given:
+///   lat = 43160889 (43.160889°)
+///   lon = -2934364 (-2.934364°)
+/// and resolution = 100_000,
+/// the resulting tile will be:
+///   x = 43160889 / 100_000 = 431
+///   y = -2934364 / 100_000 = -29
+///
+/// This allows grouping markers spatially for fast region queries.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
+pub struct Tile {
+    pub x: i32,
+    pub y: i32,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
@@ -32,31 +50,45 @@ pub struct MarkerData {
 #[account]
 pub struct MarkerAccount {
     pub author: Pubkey,
-    pub data: MarkerData,
+    pub marker: MarkerData,
     pub created_at: i64,
     pub updated_at: i64,
 }
 
-#[macro_export]
-macro_rules! marker_space {
-    ($marker:expr) => {
-        // From https://book.anchor-lang.com/anchor_references/space.html
-        8 +                                                                         // Discriminator
-        4 + $marker.title.len() +                                                   // title : String prefix + content
-        4 + $marker.description.len() +                                             // description: String prefix + content
-        std::mem::size_of::<Position>() +                                           // position: Position
-        std::mem::size_of::<MarkerType>() +                                         // marker_type: MarkerType
-        32 +                                                                        // author: Pubkey
-        8 +                                                                         // created_at: i64
-        8                                                                           // updated_at: i64
-    };
+#[account]
+pub struct MarkerChunk {
+    pub tile: Tile,
+    pub markers: Vec<Pubkey>, // PDAs of markers in this tile
 }
 
 impl Position {
-    pub fn seed(&self) -> [u8; 8] {
-        let mut seed = [0u8; 8];
-        seed[..4].copy_from_slice(&self.lat.to_le_bytes());
-        seed[4..].copy_from_slice(&self.lon.to_le_bytes());
-        seed
+    pub fn tile(&self, resolution: i32) -> Tile {
+        Tile {
+            x: self.lat.div_euclid(resolution),
+            y: self.lon.div_euclid(resolution),
+        }
     }
+}
+
+#[macro_export]
+macro_rules! marker_account_space {
+    ($marker:expr) => {
+        8 +                                     // discriminator
+        32 +                                    // author: Pubkey
+        4 + $marker.title.len() +               // title
+        4 + $marker.description.len() +         // description
+        std::mem::size_of::<Position>() +       // position
+        std::mem::size_of::<MarkerType>() +     // marker_type
+        8 +                                     // created_at
+    8                                           // updated_at
+    };
+}
+
+#[macro_export]
+macro_rules! marker_chunk_space {
+    ($max_markers:expr) => {
+        8 +                                     // discriminator
+        std::mem::size_of::<Tile>() +           // tile
+        4 + ($max_markers * 32)                 // Vec<Pubkey>: 4-byte length + 32 bytes per pubkey
+    };
 }
