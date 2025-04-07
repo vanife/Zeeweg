@@ -18,7 +18,8 @@ pub struct AddMarker<'info> {
     pub marker_account: Account<'info, MarkerAccount>,
 
     #[account(
-        init_if_needed, // Using init_if_needed to avoid explicit init for chunks globaly, there’s no re-initialization risk
+        // NOTE: Using init_if_needed to avoid explicit init for chunks globaly, there’s no re-initialization risk
+        init_if_needed,
         payer = author,
         space = crate::marker_chunk_space!(MAX_MARKERS_IN_CHUNK),
         seeds = [b"chunk", marker.position.tile(TILE_RESOLUTION).x.to_le_bytes().as_ref(), marker.position.tile(TILE_RESOLUTION).y.to_le_bytes().as_ref()],
