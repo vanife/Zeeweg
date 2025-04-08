@@ -8,7 +8,7 @@ import type { Zeeweg } from '../target/types/zeeweg'
 export { Zeeweg, ZeewegIDL }
 
 // The programId is imported from the program IDL.
-export const BASIC_PROGRAM_ID = new PublicKey(ZeewegIDL.address)
+export const ZEEWEG_PROGRAM_ID = new PublicKey(ZeewegIDL.address)
 
 // This is a helper function to get the Basic Anchor program.
 export function getZeewegProgram(provider: AnchorProvider) {

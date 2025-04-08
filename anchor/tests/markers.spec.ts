@@ -80,7 +80,7 @@ describe('markers', () => {
           author: alice,
           markerAccount: markerPda,
           markerChunk: chunkPda,
-        })
+        } as any)
         .rpc()
       assert.fail('Expected marker creation to fail but it succeeded')
     } catch (err: any) {
