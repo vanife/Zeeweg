@@ -18,10 +18,10 @@ describe('markers', () => {
   const tileX = Math.floor(basePosition.lat / TILE_RESOLUTION)
   const tileY = Math.floor(basePosition.lon / TILE_RESOLUTION)
 
-  // PDA for the chunk
-  const [chunkPda] = anchor.web3.PublicKey.findProgramAddressSync(
+  // PDA for the tile
+  const [tilePda] = anchor.web3.PublicKey.findProgramAddressSync(
     [
-      Buffer.from('chunk'),
+      Buffer.from('marker_tile'),
       Buffer.from(new Int32Array([tileX]).buffer),
       Buffer.from(new Int32Array([tileY]).buffer),
     ],
@@ -37,9 +37,9 @@ describe('markers', () => {
     }
 
     // PDA for the marker itself
-    const [markerPda] = anchor.web3.PublicKey.findProgramAddressSync(
+    const [entryPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [
-        Buffer.from('marker'),
+        Buffer.from('marker_entry'),
         Buffer.from(new Int32Array([basePosition.lat]).buffer),
         Buffer.from(new Int32Array([basePosition.lon]).buffer),
       ],
@@ -51,26 +51,26 @@ describe('markers', () => {
       .addMarker(marker)
       .accounts({
         author: alice,
-        markerAccount: markerPda,
-        markerChunk: chunkPda,
+        markerEntry: entryPda,
+        markerTile: tilePda,
       })
       .rpc()
 
     console.log('Transaction signature:', tx)
 
-    // Validate marker account
-    const markerAccount = await program.account.markerAccount.fetch(markerPda)
-    assert.strictEqual(markerAccount.author.toBase58(), alice.toBase58())
-    assert.strictEqual(markerAccount.marker.title, marker.title)
-    assert.strictEqual(markerAccount.marker.description, marker.description)
-    assert.deepStrictEqual(markerAccount.marker.position, basePosition)
-    assert.deepStrictEqual(markerAccount.marker.markerType, marker.markerType)
+    // Validate entry account
+    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
+    assert.strictEqual(entryAccount.marker.title, marker.title)
+    assert.strictEqual(entryAccount.marker.description, marker.description)
+    assert.deepStrictEqual(entryAccount.marker.position, basePosition)
+    assert.deepStrictEqual(entryAccount.marker.markerType, marker.markerType)
 
-    // Validate chunk account
-    const chunkAccount = await program.account.markerChunk.fetch(chunkPda)
-    assert.strictEqual(chunkAccount.tile.x, tileX)
-    assert.strictEqual(chunkAccount.tile.y, tileY)
-    assert.ok(chunkAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(markerPda)))
+    // Validate tile account
+    const tileAccount = await program.account.markerTile.fetch(tilePda)
+    assert.strictEqual(tileAccount.tile.x, tileX)
+    assert.strictEqual(tileAccount.tile.y, tileY)
+    assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(entryPda)))
 
     // Try to add the same marker again
     try {
@@ -78,8 +78,8 @@ describe('markers', () => {
         .addMarker(marker)
         .accounts({
           author: alice,
-          markerAccount: markerPda,
-          markerChunk: chunkPda,
+          markerEntry: entryPda,
+          markerTile: tilePda,
         } as any)
         .rpc()
       assert.fail('Expected marker creation to fail but it succeeded')
@@ -89,7 +89,7 @@ describe('markers', () => {
     }
   })
 
-  it('bob adds a marker in the same chunk after alice', async () => {
+  it('bob adds a marker in the same tile after alice', async () => {
     // Create a new keypair for Bob
     const bobKeypair = anchor.web3.Keypair.generate()
     const bob = bobKeypair.publicKey
@@ -108,9 +108,9 @@ describe('markers', () => {
       markerType: { beach: {} },
     }
 
-    const [markerPda] = anchor.web3.PublicKey.findProgramAddressSync(
+    const [entryPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [
-        Buffer.from('marker'),
+        Buffer.from('marker_entry'),
         Buffer.from(new Int32Array([positionBob.lat]).buffer),
         Buffer.from(new Int32Array([positionBob.lon]).buffer),
       ],
@@ -122,26 +122,26 @@ describe('markers', () => {
       .addMarker(marker)
       .accounts({
         author: bob,
-        markerAccount: markerPda,
-        markerChunk: chunkPda,
+        markerEntry: entryPda,
+        markerTile: tilePda,
       })
       .signers([bobKeypair])
       .rpc()
 
     console.log('Transaction signature:', tx)
 
-    // Validate marker account
-    const markerAccount = await program.account.markerAccount.fetch(markerPda)
-    assert.strictEqual(markerAccount.author.toBase58(), bob.toBase58())
-    assert.strictEqual(markerAccount.marker.title, marker.title)
-    assert.strictEqual(markerAccount.marker.description, marker.description)
-    assert.deepStrictEqual(markerAccount.marker.position, positionBob)
-    assert.deepStrictEqual(markerAccount.marker.markerType, marker.markerType)
+    // Validate entry account
+    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    assert.strictEqual(entryAccount.author.toBase58(), bob.toBase58())
+    assert.strictEqual(entryAccount.marker.title, marker.title)
+    assert.strictEqual(entryAccount.marker.description, marker.description)
+    assert.deepStrictEqual(entryAccount.marker.position, positionBob)
+    assert.deepStrictEqual(entryAccount.marker.markerType, marker.markerType)
 
-    // Validate chunk account
-    const chunkAccount = await program.account.markerChunk.fetch(chunkPda)
-    assert.strictEqual(chunkAccount.tile.x, tileX)
-    assert.strictEqual(chunkAccount.tile.y, tileY)
-    assert.ok(chunkAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(markerPda)))
+    // Validate tile account
+    const tileAccount = await program.account.markerTile.fetch(tilePda)
+    assert.strictEqual(tileAccount.tile.x, tileX)
+    assert.strictEqual(tileAccount.tile.y, tileY)
+    assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(entryPda)))
   })
 })

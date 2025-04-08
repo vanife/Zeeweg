@@ -48,7 +48,7 @@ pub struct MarkerData {
 }
 
 #[account]
-pub struct MarkerAccount {
+pub struct MarkerEntry {
     pub author: Pubkey,
     pub marker: MarkerData,
     pub created_at: i64,
@@ -56,7 +56,7 @@ pub struct MarkerAccount {
 }
 
 #[account]
-pub struct MarkerChunk {
+pub struct MarkerTile {
     pub tile: Tile,
     pub markers: Vec<Pubkey>, // PDAs of markers in this tile
 }
@@ -71,7 +71,7 @@ impl Position {
 }
 
 #[macro_export]
-macro_rules! marker_account_space {
+macro_rules! marker_entry_space {
     ($marker:expr) => {
         8 +                                     // discriminator
         32 +                                    // author: Pubkey
@@ -85,7 +85,7 @@ macro_rules! marker_account_space {
 }
 
 #[macro_export]
-macro_rules! marker_chunk_space {
+macro_rules! marker_tile_space {
     ($max_markers:expr) => {
         8 +                                     // discriminator
         std::mem::size_of::<Tile>() +           // tile

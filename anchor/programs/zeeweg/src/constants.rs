@@ -1,6 +1,6 @@
-/// Maximum number of markers a single tile chunk can store without realloc.
+/// Maximum number of markers a single tile can store without realloc.
 /// Computed as: floor((10_240 - 8 (discriminator) - 8 (Tile) - 4 (vec len)) / 32)
-pub const MAX_MARKERS_IN_CHUNK: usize = 319;
+pub const MAX_MARKERS_IN_TILE: usize = 319;
 
 /// Size of a tile in microdegrees (° × 1e6).
 /// Each tile covers 0.1° × 0.1° of geodetic space.

@@ -26,7 +26,7 @@
           "signer": true
         },
         {
-          "name": "marker_account",
+          "name": "marker_entry",
           "writable": true,
           "pda": {
             "seeds": [
@@ -38,7 +38,13 @@
                   114,
                   107,
                   101,
-                  114
+                  114,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
                 ]
               },
               {
@@ -53,18 +59,24 @@
           }
         },
         {
-          "name": "marker_chunk",
+          "name": "marker_tile",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  99,
-                  104,
-                  117,
-                  110,
-                  107
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  116,
+                  105,
+                  108,
+                  101
                 ]
               },
               {
@@ -97,29 +109,29 @@
   ],
   "accounts": [
     {
-      "name": "MarkerAccount",
+      "name": "MarkerEntry",
       "discriminator": [
-        166,
-        174,
-        96,
-        127,
-        19,
-        33,
-        107,
-        222
+        155,
+        135,
+        137,
+        236,
+        114,
+        198,
+        64,
+        152
       ]
     },
     {
-      "name": "MarkerChunk",
+      "name": "MarkerTile",
       "discriminator": [
-        197,
-        79,
-        67,
-        58,
-        109,
-        53,
-        25,
-        31
+        21,
+        246,
+        172,
+        206,
+        96,
+        252,
+        156,
+        193
       ]
     }
   ],
@@ -131,56 +143,6 @@
     }
   ],
   "types": [
-    {
-      "name": "MarkerAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "author",
-            "type": "pubkey"
-          },
-          {
-            "name": "marker",
-            "type": {
-              "defined": {
-                "name": "MarkerData"
-              }
-            }
-          },
-          {
-            "name": "created_at",
-            "type": "i64"
-          },
-          {
-            "name": "updated_at",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "MarkerChunk",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "tile",
-            "type": {
-              "defined": {
-                "name": "Tile"
-              }
-            }
-          },
-          {
-            "name": "markers",
-            "type": {
-              "vec": "pubkey"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "MarkerData",
       "type": {
@@ -208,6 +170,56 @@
               "defined": {
                 "name": "MarkerType"
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarkerEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "marker",
+            "type": {
+              "defined": {
+                "name": "MarkerData"
+              }
+            }
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarkerTile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tile",
+            "type": {
+              "defined": {
+                "name": "Tile"
+              }
+            }
+          },
+          {
+            "name": "markers",
+            "type": {
+              "vec": "pubkey"
             }
           }
         ]

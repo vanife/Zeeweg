@@ -32,7 +32,7 @@ export type Zeeweg = {
           "signer": true
         },
         {
-          "name": "markerAccount",
+          "name": "markerEntry",
           "writable": true,
           "pda": {
             "seeds": [
@@ -44,7 +44,13 @@ export type Zeeweg = {
                   114,
                   107,
                   101,
-                  114
+                  114,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
                 ]
               },
               {
@@ -59,18 +65,24 @@ export type Zeeweg = {
           }
         },
         {
-          "name": "markerChunk",
+          "name": "markerTile",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  99,
-                  104,
-                  117,
-                  110,
-                  107
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  116,
+                  105,
+                  108,
+                  101
                 ]
               },
               {
@@ -103,29 +115,29 @@ export type Zeeweg = {
   ],
   "accounts": [
     {
-      "name": "markerAccount",
+      "name": "markerEntry",
       "discriminator": [
-        166,
-        174,
-        96,
-        127,
-        19,
-        33,
-        107,
-        222
+        155,
+        135,
+        137,
+        236,
+        114,
+        198,
+        64,
+        152
       ]
     },
     {
-      "name": "markerChunk",
+      "name": "markerTile",
       "discriminator": [
-        197,
-        79,
-        67,
-        58,
-        109,
-        53,
-        25,
-        31
+        21,
+        246,
+        172,
+        206,
+        96,
+        252,
+        156,
+        193
       ]
     }
   ],
@@ -137,56 +149,6 @@ export type Zeeweg = {
     }
   ],
   "types": [
-    {
-      "name": "markerAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "author",
-            "type": "pubkey"
-          },
-          {
-            "name": "marker",
-            "type": {
-              "defined": {
-                "name": "markerData"
-              }
-            }
-          },
-          {
-            "name": "createdAt",
-            "type": "i64"
-          },
-          {
-            "name": "updatedAt",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "markerChunk",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "tile",
-            "type": {
-              "defined": {
-                "name": "tile"
-              }
-            }
-          },
-          {
-            "name": "markers",
-            "type": {
-              "vec": "pubkey"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "markerData",
       "type": {
@@ -214,6 +176,56 @@ export type Zeeweg = {
               "defined": {
                 "name": "markerType"
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "markerEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "marker",
+            "type": {
+              "defined": {
+                "name": "markerData"
+              }
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "markerTile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tile",
+            "type": {
+              "defined": {
+                "name": "tile"
+              }
+            }
+          },
+          {
+            "name": "markers",
+            "type": {
+              "vec": "pubkey"
             }
           }
         ]
