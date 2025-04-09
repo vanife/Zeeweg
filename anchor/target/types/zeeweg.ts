@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/zeeweg.json`.
  */
 export type Zeeweg = {
-  "address": "DsUkNGcudGLMf7jMaqsuVcZfX3BDeLoQqnuCVTFrCXyh",
+  "address": "HGY1cAiRYbgAcCFpSU9cYw21wpj9gVgWERpo8RRTeZdu",
   "metadata": {
     "name": "zeeweg",
     "version": "0.1.0",
