@@ -1,53 +1,35 @@
 import * as anchor from '@coral-xyz/anchor'
 import { Program } from '@coral-xyz/anchor'
-import { Zeeweg } from '../target/types/zeeweg'
 import assert from 'assert'
+
+import * as zeeweg from '../src/zeeweg-exports'
+import * as helpers from './helpers'
 
 describe('markers', () => {
   anchor.setProvider(anchor.AnchorProvider.env())
-  const program = anchor.workspace.Zeeweg as Program<Zeeweg>
+  const program = anchor.workspace.Zeeweg as Program<zeeweg.Zeeweg>
   const provider = anchor.getProvider()
   const alice = provider.publicKey as anchor.web3.PublicKey
 
-  const TILE_RESOLUTION = 100_000
+  // Base position for the marker and tile
+  const basePosition: zeeweg.Position = { lat: 43160889, lon: -2934364 } // Bilbao
+  const tileX = Math.floor(basePosition.lat / zeeweg.MARKER_TILE_RESOLUTION)
+  const tileY = Math.floor(basePosition.lon / zeeweg.MARKER_TILE_RESOLUTION)
 
-  // Base position for the marker
-  const basePosition = { lat: 43160889, lon: -2934364 } // Bilbao
-
-  // Compute tile coords
-  const tileX = Math.floor(basePosition.lat / TILE_RESOLUTION)
-  const tileY = Math.floor(basePosition.lon / TILE_RESOLUTION)
-
-  // PDA for the tile
-  const [tilePda] = anchor.web3.PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('marker_tile'),
-      Buffer.from(new Int32Array([tileX]).buffer),
-      Buffer.from(new Int32Array([tileY]).buffer),
-    ],
-    program.programId
-  )
+  const tilePda = zeeweg.getMarkerTilePda(program, basePosition)
 
   it('adds a single marker and fails to add this marker again', async () => {
-    const marker = {
+    const marker: zeeweg.MarkerData = {
       title: 'Pinxo Restaurant',
       description: 'Traditional Basque tapas',
       position: basePosition,
       markerType: { restaurant: {} },
     }
 
-    // PDA for the marker itself
-    const [entryPda] = anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('marker_entry'),
-        Buffer.from(new Int32Array([basePosition.lat]).buffer),
-        Buffer.from(new Int32Array([basePosition.lon]).buffer),
-      ],
-      program.programId
-    )
+    const entryPda = zeeweg.getMarkerEntryPda(program, basePosition)
 
     // Add the marker first time
-    const tx = await program.methods
+    const sig = await program.methods
       .addMarker(marker)
       .accounts({
         author: alice,
@@ -56,7 +38,8 @@ describe('markers', () => {
       })
       .rpc()
 
-    console.log('Transaction signature:', tx)
+    console.log('Transaction signature:', sig)
+    zeeweg.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
     // Validate entry account
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
@@ -94,31 +77,23 @@ describe('markers', () => {
     const bobKeypair = anchor.web3.Keypair.generate()
     const bob = bobKeypair.publicKey
 
-    // Airdrop some SOL to Bob's account
-    const sig = await provider.connection.requestAirdrop(bob, 1e9)
-    await provider.connection.confirmTransaction(sig)
+    // Airdrop 1 SOL to Bob's account
+    await helpers.airdrop(provider.connection, bob, 1000000000)
 
     // Create a new marker for Bob
     const positionBob = { lat: basePosition.lat + 1, lon: basePosition.lon + 1 }
 
-    const marker = {
+    const marker: zeeweg.MarkerData = {
       title: 'Bob marker',
       description: 'Bob was here too',
       position: positionBob,
       markerType: { beach: {} },
     }
 
-    const [entryPda] = anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('marker_entry'),
-        Buffer.from(new Int32Array([positionBob.lat]).buffer),
-        Buffer.from(new Int32Array([positionBob.lon]).buffer),
-      ],
-      program.programId
-    )
+    const entryPda = zeeweg.getMarkerEntryPda(program, positionBob)
 
     // Add new marker from bob's account
-    const tx = await program.methods
+    const sig = await program.methods
       .addMarker(marker)
       .accounts({
         author: bob,
@@ -128,7 +103,8 @@ describe('markers', () => {
       .signers([bobKeypair])
       .rpc()
 
-    console.log('Transaction signature:', tx)
+    console.log('Transaction signature:', sig)
+    zeeweg.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
     // Validate entry account
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
