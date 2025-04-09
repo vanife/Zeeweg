@@ -34,8 +34,8 @@ export type MarkerType =
 
 // This is the position type, should match Position from state.rs
 export interface Position {
-  lat: number // in microdegrees
-  lon: number // in microdegrees
+  lat: number // in microdegrees ( degrees * 1e6)
+  lon: number // in microdegrees ( degrees * 1e6)
 }
 
 // This is the marker data type, should match MarkerData from state.rs
@@ -73,14 +73,4 @@ export function getMarkerTilePda(program: Program<Zeeweg>, position: Position): 
     program.programId
   )
   return tilePda
-}
-
-// This function is used to confirm a transaction with the latest blockhash
-export async function confirmTransactionWithLatestBlockhash(connection: anchor.web3.Connection, sig: string) {
-  const latestBlockHash = await connection.getLatestBlockhash();
-  await anchor.getProvider().connection.confirmTransaction({
-    blockhash: latestBlockHash.blockhash,
-    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    signature: sig,
-  });
 }

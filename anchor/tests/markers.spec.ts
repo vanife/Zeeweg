@@ -35,11 +35,11 @@ describe('markers', () => {
         author: alice,
         markerEntry: entryPda,
         markerTile: tilePda,
-      })
+      } as any)
       .rpc()
 
     console.log('Transaction signature:', sig)
-    zeeweg.confirmTransactionWithLatestBlockhash(provider.connection, sig)
+    helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
     // Validate entry account
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
@@ -99,12 +99,12 @@ describe('markers', () => {
         author: bob,
         markerEntry: entryPda,
         markerTile: tilePda,
-      })
+      } as any)
       .signers([bobKeypair])
       .rpc()
 
     console.log('Transaction signature:', sig)
-    zeeweg.confirmTransactionWithLatestBlockhash(provider.connection, sig)
+    helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
     // Validate entry account
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
