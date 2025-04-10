@@ -1,7 +1,8 @@
 // Here we export some useful types and functions for interacting with the Anchor program.
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
+import { AnchorProvider, Program, BN } from '@coral-xyz/anchor'
 import * as anchor from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
+
 import ZeewegIDL from '../target/idl/zeeweg.json'
 import type { Zeeweg } from '../target/types/zeeweg'
 
@@ -46,6 +47,13 @@ export interface MarkerData {
   markerType: MarkerType
 }
 
+export interface MarkerEntry {
+  author: PublicKey
+  marker: MarkerData
+  createdAt: BN
+  updatedAt: BN
+}
+
 // MarkerEntry PDA depends on the position (lat, lon)
 export function getMarkerEntryPda(program: Program<Zeeweg>, position: Position): PublicKey {
   const [entryPda] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -60,10 +68,7 @@ export function getMarkerEntryPda(program: Program<Zeeweg>, position: Position):
 }
 
 // MarkerTile PDA depends on the position (lat, lon) dvided by the tile resolution
-export function getMarkerTilePda(program: Program<Zeeweg>, position: Position): PublicKey {
-  const tileX = Math.floor(position.lat / MARKER_TILE_RESOLUTION)
-  const tileY = Math.floor(position.lon / MARKER_TILE_RESOLUTION)
-
+export function getMarkerTilePda(program: Program<Zeeweg>, tileX: number, tileY: number): PublicKey {
   const [tilePda] = anchor.web3.PublicKey.findProgramAddressSync(
     [
       Buffer.from('marker_tile'),

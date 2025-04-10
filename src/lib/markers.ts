@@ -6,7 +6,10 @@ export async function addMarker(provider: AnchorProvider, marker: zeeweg.MarkerD
   const program = zeeweg.getZeewegProgram(provider)
 
   const entryPda = zeeweg.getMarkerEntryPda(program, marker.position)
-  const tilePda = zeeweg.getMarkerTilePda(program, marker.position)
+
+  const tileX = Math.floor(marker.position.lat / zeeweg.MARKER_TILE_RESOLUTION)
+  const tileY = Math.floor(marker.position.lon / zeeweg.MARKER_TILE_RESOLUTION)
+  const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
 
   const sig = await program.methods
     .addMarker(marker)
@@ -25,4 +28,24 @@ export async function addMarker(provider: AnchorProvider, marker: zeeweg.MarkerD
   });
 
   return sig
+}
+
+export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: number; y: number }[]): Promise<zeeweg.MarkerData[]> {
+  const program = zeeweg.getZeewegProgram(provider)
+
+  // Step 1: Fetch the tile accounts for the given tiles
+  const tilePdas = tiles.map(tile => zeeweg.getMarkerTilePda(program, tile.x, tile.y))
+  const tileAccounts = await program.account.markerTile.fetchMultiple(tilePdas)
+
+  const markerPdas = tileAccounts.flatMap(tile => tile?.markers ?? [])
+
+  if (markerPdas.length === 0) return []
+
+  // Step 2: Fetch the marker accounts for the given marker PDAs
+  const markerAccounts = await program.account.markerEntry.fetchMultiple(markerPdas)
+
+  // Step 3: Filter out invalid entries and return the markers
+  return markerAccounts
+    .filter((entry): entry is zeeweg.MarkerEntry => !!entry)
+    .map(entry => entry.marker)
 }

@@ -16,7 +16,7 @@ describe('markers', () => {
   const tileX = Math.floor(basePosition.lat / zeeweg.MARKER_TILE_RESOLUTION)
   const tileY = Math.floor(basePosition.lon / zeeweg.MARKER_TILE_RESOLUTION)
 
-  const tilePda = zeeweg.getMarkerTilePda(program, basePosition)
+  const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
 
   it('adds a single marker and fails to add this marker again', async () => {
     const marker: zeeweg.MarkerData = {
