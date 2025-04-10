@@ -43,6 +43,7 @@ export default function DashboardFeature() {
     } finally {
       setIsPlacingMarker(false)
       toast.success('Marker added')
+      // TODO: Load created marker
     }
   }
 

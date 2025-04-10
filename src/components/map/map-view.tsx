@@ -39,16 +39,24 @@ type Props = {
   onViewportChanged: (topLeft: Coordinate, bottomRight: Coordinate, zoom: number) => void
 }
 
-export default function MapView({ apiRef, center, zoom, isPickingCoordinate, onCoordinatePicked, onViewportChanged }: Props) {
+export default function MapView({
+  apiRef,
+  center,
+  zoom,
+  isPickingCoordinate,
+  onCoordinatePicked,
+  onViewportChanged,
+}: Props) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const [map, setMap] = useState<Map | null>(null)
   const [mouseCoord, setMouseCoord] = useState<[number, number] | null>(null)
   const [mousePixel, setMousePixel] = useState<[number, number] | null>(null)
+  const [isHovered, setIsHovered] = useState(false)
 
   const vectorSourceRef = useRef(new VectorSource())
-  const vectorLayerRef = useRef<VectorLayer>(new VectorLayer({ source: vectorSourceRef.current }))
+  const vectorLayerRef = useRef(new VectorLayer({ source: vectorSourceRef.current }))
 
-  // Setup map with tile layer and viewport handler
+  // Initialize map
   useEffect(() => {
     if (!mapRef.current) return
 
@@ -68,36 +76,25 @@ export default function MapView({ apiRef, center, zoom, isPickingCoordinate, onC
       const topLeft = toLonLat([extent[0], extent[3]]) as Coordinate
       const bottomRight = toLonLat([extent[2], extent[1]]) as Coordinate
       const zoom = view.getZoom() || 1
-
       onViewportChanged(topLeft, bottomRight, zoom)
     })
 
     setMap(newMap)
     return () => newMap.setTarget(undefined)
-  }, [onViewportChanged, center, zoom])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  // Setup picking mode and click handler
+  // Handle events
   useEffect(() => {
-    if (!map || !isPickingCoordinate) return
-
-    const handleClick = (event: any) => {
-      const [lon, lat] = toLonLat(event.coordinate)
-      onCoordinatePicked(lon, lat)
-    }
-
-    map.once('click', handleClick)
-
-    return () => { map.un('click', handleClick) }
-  }, [map, isPickingCoordinate, onCoordinatePicked])
-
-  // Setup mouse move handler (for picking mode for now)
-  useEffect(() => {
-    if (!map || !isPickingCoordinate) return
-
+    if (!map) return
     const mapEl = map.getTargetElement()
-    if (!mapEl) return
 
+    const handleMouseEnter = () => setIsHovered(true)
+    const handleMouseLeave = () => setIsHovered(false)
     const handleMouseMove = (event: MouseEvent) => {
+      if (!isPickingCoordinate) 
+        return
+
       const rect = mapEl.getBoundingClientRect()
       const x = event.clientX - rect.left
       const y = event.clientY - rect.top
@@ -108,11 +105,30 @@ export default function MapView({ apiRef, center, zoom, isPickingCoordinate, onC
       setMousePixel([x, y])
     }
 
-    mapEl.addEventListener('mousemove', handleMouseMove)
-    return () => mapEl.removeEventListener('mousemove', handleMouseMove)
-  }, [map, isPickingCoordinate])
+    const handleClick = (event: any) => {
+      if (!isPickingCoordinate) 
+        return
 
-  // Setup vector layer for signs
+      const [lon, lat] = toLonLat(event.coordinate)
+      onCoordinatePicked(lon, lat)
+    }
+
+    mapEl.addEventListener('mouseenter', handleMouseEnter)
+    mapEl.addEventListener('mouseleave', handleMouseLeave)
+    mapEl.addEventListener('mousemove', handleMouseMove)
+    map.on('click', handleClick)
+
+    mapEl.style.cursor = isPickingCoordinate ? 'crosshair' : ''
+
+    return () => {
+      mapEl.removeEventListener('mouseenter', handleMouseEnter)
+      mapEl.removeEventListener('mouseleave', handleMouseLeave)
+      mapEl.removeEventListener('mousemove', handleMouseMove)
+      map.un('click', handleClick)
+    }
+  }, [map, isPickingCoordinate, onCoordinatePicked])
+
+  // Render signs
   useEffect(() => {
     if (!apiRef) return
 
@@ -133,11 +149,9 @@ export default function MapView({ apiRef, center, zoom, isPickingCoordinate, onC
           }),
         })
       )
-
       if (existing) {
         vectorSourceRef.current.removeFeature(existing)
       }
-
       vectorSourceRef.current.addFeature(feature)
     }
 
@@ -153,7 +167,7 @@ export default function MapView({ apiRef, center, zoom, isPickingCoordinate, onC
 
   return (
     <div ref={mapRef} className="w-full h-full relative">
-      {isPickingCoordinate && mouseCoord && mousePixel && (
+      {isPickingCoordinate && isHovered && mouseCoord && mousePixel && (
         <div
           className="absolute z-20 bg-white text-sm px-2 py-1 rounded shadow pointer-events-none"
           style={{ left: mousePixel[0] + 12, top: mousePixel[1] + 12 }}
