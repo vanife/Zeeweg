@@ -1,7 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useRef } from 'react'
 import { Coordinate } from 'ol/coordinate'
 import { fromLonLat } from 'ol/proj'
 
