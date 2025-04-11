@@ -28,14 +28,15 @@ export type MapSign = {
 export type MapViewApi = {
   upsertSign: (sign: MapSign) => void
   removeSign: (id: string) => void
+  getCenter: () => [number, number]
+  startPicking: (onPick: (lon: number, lat: number) => void) => void
+  stopPicking: () => void
 }
 
 type Props = {
   apiRef?: React.MutableRefObject<MapViewApi | null>
   center: Coordinate
   zoom: number
-  isPickingCoordinate: boolean
-  onCoordinatePicked: (lon: number, lat: number) => void
   onViewportChanged: (topLeft: Coordinate, bottomRight: Coordinate, zoom: number) => void
 }
 
@@ -43,8 +44,6 @@ export default function MapView({
   apiRef,
   center,
   zoom,
-  isPickingCoordinate,
-  onCoordinatePicked,
   onViewportChanged,
 }: Props) {
   const mapRef = useRef<HTMLDivElement | null>(null)
@@ -52,11 +51,12 @@ export default function MapView({
   const [mouseCoord, setMouseCoord] = useState<[number, number] | null>(null)
   const [mousePixel, setMousePixel] = useState<[number, number] | null>(null)
   const [isHovered, setIsHovered] = useState(false)
+  const [isPicking, setIsPicking] = useState(false)
+  const onPickRef = useRef<((lon: number, lat: number) => void) | null>(null)
 
   const vectorSourceRef = useRef(new VectorSource())
   const vectorLayerRef = useRef(new VectorLayer({ source: vectorSourceRef.current }))
 
-  // Initialize map
   useEffect(() => {
     if (!mapRef.current) return
 
@@ -84,7 +84,6 @@ export default function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Handle events
   useEffect(() => {
     if (!map) return
     const mapEl = map.getTargetElement()
@@ -92,8 +91,7 @@ export default function MapView({
     const handleMouseEnter = () => setIsHovered(true)
     const handleMouseLeave = () => setIsHovered(false)
     const handleMouseMove = (event: MouseEvent) => {
-      if (!isPickingCoordinate) 
-        return
+      if (!isPicking) return
 
       const rect = mapEl.getBoundingClientRect()
       const x = event.clientX - rect.left
@@ -106,11 +104,10 @@ export default function MapView({
     }
 
     const handleClick = (event: any) => {
-      if (!isPickingCoordinate) 
-        return
+      if (!isPicking) return
 
       const [lon, lat] = toLonLat(event.coordinate)
-      onCoordinatePicked(lon, lat)
+      onPickRef.current?.(lon, lat)
     }
 
     mapEl.addEventListener('mouseenter', handleMouseEnter)
@@ -118,7 +115,7 @@ export default function MapView({
     mapEl.addEventListener('mousemove', handleMouseMove)
     map.on('click', handleClick)
 
-    mapEl.style.cursor = isPickingCoordinate ? 'crosshair' : ''
+    mapEl.style.cursor = isPicking ? 'crosshair' : ''
 
     return () => {
       mapEl.removeEventListener('mouseenter', handleMouseEnter)
@@ -126,9 +123,8 @@ export default function MapView({
       mapEl.removeEventListener('mousemove', handleMouseMove)
       map.un('click', handleClick)
     }
-  }, [map, isPickingCoordinate, onCoordinatePicked])
+  }, [map, isPicking])
 
-  // Render signs
   useEffect(() => {
     if (!apiRef) return
 
@@ -162,12 +158,29 @@ export default function MapView({
       }
     }
 
-    apiRef.current = { upsertSign, removeSign }
-  }, [apiRef])
+    const getCenter = (): [number, number] => {
+      const center = map?.getView().getCenter()
+      if (!center) return [0, 0]
+      const [lon, lat] = toLonLat(center)
+      return [lat, lon]
+    }
+
+    const startPicking = (onPick: (lon: number, lat: number) => void) => {
+      onPickRef.current = onPick
+      setIsPicking(true)
+    }
+
+    const stopPicking = () => {
+      onPickRef.current = null
+      setIsPicking(false)
+    }
+
+    apiRef.current = { upsertSign, removeSign, getCenter, startPicking, stopPicking }
+  }, [apiRef, map])
 
   return (
     <div ref={mapRef} className="w-full h-full relative">
-      {isPickingCoordinate && isHovered && mouseCoord && mousePixel && (
+      {isPicking && isHovered && mouseCoord && mousePixel && (
         <div
           className="absolute z-20 bg-white text-sm px-2 py-1 rounded shadow pointer-events-none"
           style={{ left: mousePixel[0] + 12, top: mousePixel[1] + 12 }}

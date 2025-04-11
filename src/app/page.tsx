@@ -1,5 +1,5 @@
-import DashboardFeature from '@/components/dashboard/dashboard-feature'
+import MarkersFeature from '@/components/markers/markers-feature'
 
 export default function Page() {
-  return <DashboardFeature />
+  return <MarkersFeature />
 }
