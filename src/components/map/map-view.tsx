@@ -32,7 +32,8 @@ export type MapViewApi = {
   upsertSign: (sign: MapSign) => void
   removeSign: (id: string) => void
   getCenter: () => [number, number]
-  startPicking: (onPick: (lon: number, lat: number) => void) => void
+
+  startPicking: (lon: number, lat: number, onPick: (lon: number, lat: number) => void) => void
   stopPicking: () => void
 }
 
@@ -194,10 +195,21 @@ export default function MapView({ apiRef, center, zoom, onViewportChanged }: Pro
         return [lat, lon]
       },
 
-      startPicking: (cb) => {
-        onPick.current = cb
+      startPicking: (lon: number, lat: number, cb) => {
         isPicking.current = true
         setCursor('crosshair')
+
+        if (pickedPointRef.current) {
+          vectorSource.removeFeature(pickedPointRef.current)
+        }
+
+        const coordinate = fromLonLat([lon, lat])
+        const point = new Feature(new Point(coordinate))
+        point.set('pickedPoint', true)
+        pickedPointRef.current = point
+        vectorSource.addFeature(point)
+
+        onPick.current = cb
       },
 
       stopPicking: () => {
@@ -209,7 +221,7 @@ export default function MapView({ apiRef, center, zoom, onViewportChanged }: Pro
           vectorSource.removeFeature(pickedPointRef.current)
           pickedPointRef.current = null
         }
-      }
+      },
     }
   }
 

@@ -6,7 +6,7 @@ import { fromLonLat } from 'ol/proj'
 
 import * as zeeweg from '@project/anchor'
 
-import { getMarkersForTiles } from '@/lib/markers'
+import { getMarkersForTiles, loadMarkerByLonLat } from '@/lib/markers'
 import { Settings } from '@/lib/settings'
 
 import MapView, { MapSign, MapViewApi } from '../map/map-view'
@@ -67,6 +67,25 @@ export default function MarkersFeature() {
   const provider = useAnchorProvider()
   const mapApiRef = useRef<MapViewApi>(null)
 
+  const loadMarkers = async (tiles: { x: number; y: number }[]) => {
+    try {
+      const markers = await getMarkersForTiles(provider, tiles)
+
+      const api = mapApiRef.current
+      if (!api) return
+
+      for (const marker of markers) {
+        try {
+          api.upsertSign(marker_to_sign(marker))
+        } catch (err) {
+          console.warn('Skipping unknown marker type:', marker, err)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load markers:', err)
+    }
+  }
+
   const onViewportChanged = async (topLeft: Coordinate, bottomRight: Coordinate, zoom: number) => {
     Settings.setMapSettings({
       lon: (topLeft[0] + bottomRight[0]) / 2,
@@ -95,29 +114,25 @@ export default function MarkersFeature() {
       }
     }
 
+    loadMarkers(tiles)
+  }
+
+  const onMarkerUpdated = async (lon: number, lat: number) => {
+    const api = mapApiRef.current
+    if (!api) return
+
     try {
-      const markers = await getMarkersForTiles(provider, tiles)
-
-      const api = mapApiRef.current
-      if (!api) return
-
-      for (const marker of markers) {
-        try {
-          api.upsertSign(marker_to_sign(marker))
-        } catch (err) {
-          console.warn('Skipping unknown marker type:', marker, err)
-        }
-      }
-
+      const marker = await loadMarkerByLonLat(provider, lon, lat)
+      api.upsertSign(marker_to_sign(marker))
     } catch (err) {
-      console.error('Failed to load markers:', err)
+      console.error('Failed to load marker:', err)
     }
   }
 
   return (
     <div className="flex w-screen h-screen">
       <div className="w-64 shadow-md z-10 p-4">
-        <InstrumentPanel mapApiRef={mapApiRef} provider={provider} />
+        <InstrumentPanel mapApiRef={mapApiRef} provider={provider} onMarkerUpdated={onMarkerUpdated}/>
       </div>
       <div className="flex-grow">
         <MapView

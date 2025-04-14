@@ -49,3 +49,15 @@ export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: n
     .filter((entry): entry is zeeweg.MarkerEntry => !!entry)
     .map(entry => entry.marker)
 }
+
+export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<zeeweg.MarkerData> {
+  const program = zeeweg.getZeewegProgram(provider)
+
+  const entryPda = zeeweg.getMarkerEntryPda(program, { lat, lon })
+
+  const markerAccount = await program.account.markerEntry.fetch(entryPda)
+  if (!markerAccount) {
+    throw new Error('Marker not found')
+  }
+  return markerAccount.marker as zeeweg.MarkerData
+}

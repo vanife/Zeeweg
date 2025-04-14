@@ -75,38 +75,11 @@ export default function MarkerEditor({ marker, onCancel, onSave }: MarkerEditorP
       </select>
 
       <div>
-        <label className="text-sm text-white">Latitude</label>
+        <label className="text-sm text-white">Position</label>
         <input
-          className="w-full px-4 py-2 rounded bg-black border border-white text-white"
-          type="number"
-          value={draft.position.lat / 1e6}
-          onChange={(e) =>
-            setDraft({
-              ...draft,
-              position: {
-                ...draft.position,
-                lat: Math.round(parseFloat(e.target.value) * 1e6),
-              },
-            })
-          }
-        />
-      </div>
-
-      <div>
-        <label className="text-sm text-white">Longitude</label>
-        <input
-          className="w-full px-4 py-2 rounded bg-black border border-white text-white"
-          type="number"
-          value={draft.position.lon / 1e6}
-          onChange={(e) =>
-            setDraft({
-              ...draft,
-              position: {
-                ...draft.position,
-                lon: Math.round(parseFloat(e.target.value) * 1e6),
-              },
-            })
-          }
+          readOnly
+          className="w-full px-4 py-2 rounded bg-black border border-white text-white disabled"
+          value={`${(draft.position.lat / 1e6).toFixed(6)}, ${(draft.position.lon / 1e6).toFixed(6)}`}
         />
       </div>
 

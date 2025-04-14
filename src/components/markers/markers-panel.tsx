@@ -13,6 +13,7 @@ import { addMarker } from '@/lib/markers'
 type Props = {
   mapApiRef: React.MutableRefObject<MapViewApi | null>
   provider: AnchorProvider
+  onMarkerUpdated: (lon: number, lat: number) => void
 }
 
 enum PanelMode {
@@ -20,14 +21,14 @@ enum PanelMode {
   EditingMarker,
 }
 
-export default function InstrumentPanel({ mapApiRef, provider }: Props) {
+export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }: Props) {
   const [mode, setMode] = useState<PanelMode>(PanelMode.Idle)
   const [initialMarker, setInitialMarker] = useState<zeeweg.MarkerData | null>(null)
 
   const enterCreateMode = () => {
     const center = mapApiRef.current?.getCenter?.()
-    const lat = center?.[1] ?? 0
-    const lon = center?.[0] ?? 0
+    const lat = center?.[0] ?? 0
+    const lon = center?.[1] ?? 0
 
     const newMarker: zeeweg.MarkerData = {
       title: '',
@@ -39,7 +40,7 @@ export default function InstrumentPanel({ mapApiRef, provider }: Props) {
     setInitialMarker(newMarker)
     setMode(PanelMode.EditingMarker)
 
-    mapApiRef.current?.startPicking((lon, lat) => {
+    mapApiRef.current?.startPicking(lon, lat, (lon, lat) => {
       setInitialMarker((prev) => {
         if (!prev) return prev
         return {
@@ -66,7 +67,7 @@ export default function InstrumentPanel({ mapApiRef, provider }: Props) {
     } finally {
       exitCreateMode()
       toast.success('Marker added')
-      // TODO: Load created marker
+      onMarkerUpdated(marker.position.lon, marker.position.lat)
     }
   }
 
