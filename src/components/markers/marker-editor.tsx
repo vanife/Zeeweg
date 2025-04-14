@@ -10,8 +10,6 @@ const markerTypeNames = [
   'mountainPeak',
   'historical',
   'restaurant',
-  'hotel',
-  'hospital',
   'hazard',
 ] as const
 
@@ -35,7 +33,6 @@ export default function MarkerEditor({ marker, onCancel, onSave }: MarkerEditorP
 
   const canSave =
     draft.title.trim().length > 0 &&
-    draft.description.trim().length > 0 &&
     (draft.position.lat !== 0 || draft.position.lon !== 0)
 
   const selectedType = Object.keys(draft.markerType)[0] as MarkerTypeName

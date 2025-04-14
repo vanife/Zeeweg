@@ -17,8 +17,7 @@ export function getZeewegProgram(provider: AnchorProvider) {
   return new Program(ZeewegIDL as Zeeweg, provider)
 }
 
-// Markers helpers
-
+// Tile resolution is the size of the tile in microdegrees
 export const MARKER_TILE_RESOLUTION = 100_000
 
 // This marker type enumeration, should match MarkerType from state.rs
@@ -29,8 +28,6 @@ export type MarkerType =
   | { mountainPeak: {} }
   | { historical: {} }
   | { restaurant: {} }
-  | { hotel: {} }
-  | { hospital: {} }
   | { hazard: {} }
 
 // This is the position type, should match Position from state.rs

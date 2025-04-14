@@ -9,11 +9,55 @@ import * as zeeweg from '@project/anchor'
 import { getMarkersForTiles } from '@/lib/markers'
 import { Settings } from '@/lib/settings'
 
-import MapView, { MapViewApi } from '../map/map-view'
+import MapView, { MapSign, MapViewApi } from '../map/map-view'
 import { useAnchorProvider } from '../solana/solana-provider'
 import InstrumentPanel from './markers-panel'
 
 const MAX_TILES_TO_LOAD = 512
+
+export const marker_to_sign = (marker: zeeweg.MarkerData): MapSign => {
+  const lat = marker.position.lat / 1e6
+  const lon = marker.position.lon / 1e6
+  const type = marker.markerType
+
+  let iconUrl: string
+  let color: string
+
+  if ('basic' in type) {
+    iconUrl = '/map/marker-basic.svg'
+    color = '#757575' // gray
+  } else if ('park' in type) {
+    iconUrl = '/map/marker-park.svg'
+    color = '#4CAF50' // green
+  } else if ('beach' in type) {
+    iconUrl = '/map/marker-beach.svg'
+    color = '#03A9F4' // light blue
+  } else if ('mountainPeak' in type) {
+    iconUrl = '/map/marker-peak.svg'
+    color = '#9C27B0' // purple
+  } else if ('historical' in type) {
+    iconUrl = '/map/marker-historical.svg'
+    color = '#795548' // brown
+  } else if ('restaurant' in type) {
+    iconUrl = '/map/marker-restaurant.svg'
+    color = '#F44336' // red
+  } else if ('hazard' in type) {
+    iconUrl = '/map/marker-hazard.svg'
+    color = '#FF9800' // orange
+  } else {
+    // Exhaustive guard
+    throw new Error('Unknown marker type')
+  }
+
+  return {
+    id: `${lat}_${lon}`,
+    name: marker.title,
+    description: marker.description,
+    iconUrl,
+    color,
+    position: [lat, lon],
+  }
+}
 
 export default function MarkersFeature() {
   const saved = Settings.getMapSettings()
@@ -58,14 +102,11 @@ export default function MarkersFeature() {
       if (!api) return
 
       for (const marker of markers) {
-        api.upsertSign({
-          id: `${marker.position.lat}_${marker.position.lon}`,
-          name: marker.title,
-          description: marker.description,
-          iconUrl: '/map/marker-basic.svg',
-          color: '#ff0000',
-          position: [marker.position.lat / 1e6, marker.position.lon / 1e6],
-        })
+        try {
+          api.upsertSign(marker_to_sign(marker))
+        } catch (err) {
+          console.warn('Skipping unknown marker type:', marker, err)
+        }
       }
 
     } catch (err) {

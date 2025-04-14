@@ -34,8 +34,6 @@ pub enum MarkerType {
     MountainPeak,
     Historical,
     Restaurant,
-    Hotel,
-    Hospital,
     Hazard,
 }
 
