@@ -4,7 +4,6 @@ use crate::{constants::*, state::*};
 
 #[derive(Accounts)]
 #[instruction(description: MarkerDescription, position: Position)]
-
 pub struct AddMarker<'info> {
     #[account(mut)]
     pub author: Signer<'info>,

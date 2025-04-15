@@ -119,6 +119,108 @@ export type Zeeweg = {
           }
         }
       ]
+    },
+    {
+      "name": "deleteMarker",
+      "discriminator": [
+        123,
+        169,
+        147,
+        213,
+        252,
+        203,
+        3,
+        129
+      ],
+      "accounts": [
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "markerEntry"
+          ]
+        },
+        {
+          "name": "markerEntry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "position.lat"
+              },
+              {
+                "kind": "arg",
+                "path": "position.lon"
+              }
+            ]
+          }
+        },
+        {
+          "name": "markerTile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  116,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "position.tile(TILE_RESOLUTION).x"
+              },
+              {
+                "kind": "arg",
+                "path": "position.tile(TILE_RESOLUTION).y"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "position",
+          "type": {
+            "defined": {
+              "name": "position"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
