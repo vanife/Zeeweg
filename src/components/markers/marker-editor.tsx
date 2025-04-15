@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import * as zeeweg from '@project/anchor'
+import { Marker } from '@/lib/markers'
 
 const markerTypeNames = [
   'basic',
@@ -16,9 +18,9 @@ const markerTypeNames = [
 type MarkerTypeName = (typeof markerTypeNames)[number]
 
 export type MarkerEditorProps = {
-  marker: zeeweg.MarkerData
+  marker: Marker
   onCancel: () => void
-  onSave: (data: zeeweg.MarkerData) => void
+  onSave: (marker: Marker) => void
 }
 
 export default function MarkerEditor({ marker, onCancel, onSave }: MarkerEditorProps) {
@@ -32,10 +34,10 @@ export default function MarkerEditor({ marker, onCancel, onSave }: MarkerEditorP
   }, [marker.position])
 
   const canSave =
-    draft.title.trim().length > 0 &&
+    draft.description.name.trim().length > 0 &&
     (draft.position.lat !== 0 || draft.position.lon !== 0)
 
-  const selectedType = Object.keys(draft.markerType)[0] as MarkerTypeName
+  const selectedType = Object.keys(draft.description.markerType)[0] as MarkerTypeName
 
   return (
     <div className="space-y-4">
@@ -44,26 +46,45 @@ export default function MarkerEditor({ marker, onCancel, onSave }: MarkerEditorP
       <input
         className="w-full px-4 py-2 rounded bg-black border border-white text-white"
         type="text"
-        placeholder="Title"
-        value={draft.title}
-        onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+        placeholder="Name"
+        value={draft.description.name}
+        onChange={
+          (e) => setDraft({
+            ...draft,
+            description: {
+              ...draft.description,
+              name: e.target.value,
+            },
+          })
+        }
       />
 
       <textarea
         className="w-full px-4 py-2 rounded bg-black border border-white text-white"
         rows={3}
-        placeholder="Description"
-        value={draft.description}
-        onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+        placeholder="Details"
+        value={draft.description.details}
+        onChange={
+          (e) => setDraft({
+            ...draft,
+            description: {
+              ...draft.description,
+              details: e.target.value,
+            },
+          })
+        }
       />
 
       <select
         className="w-full px-4 py-2 rounded bg-black border border-white text-white"
         value={selectedType}
-        onChange={(e) =>
-          setDraft({
+        onChange={
+          (e) => setDraft({
             ...draft,
-            markerType: { [e.target.value]: {} } as zeeweg.MarkerType,
+            description: {
+              ...draft.description,
+              markerType: { [e.target.value]: {} } as zeeweg.MarkerType,
+            },
           })
         }
       >

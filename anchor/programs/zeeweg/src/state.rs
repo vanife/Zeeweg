@@ -38,17 +38,16 @@ pub enum MarkerType {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
-pub struct MarkerData {
-    pub title: String,
-    pub description: String,
-    pub position: Position,
+pub struct MarkerDescription {
+    pub name: String,
+    pub details: String,
     pub marker_type: MarkerType,
 }
 
 #[account]
 pub struct MarkerEntry {
     pub author: Pubkey,
-    pub marker: MarkerData,
+    pub description: MarkerDescription,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -70,15 +69,14 @@ impl Position {
 
 #[macro_export]
 macro_rules! marker_entry_space {
-    ($marker:expr) => {
+    ($description:expr) => {
         8 +                                     // discriminator
         32 +                                    // author: Pubkey
-        4 + $marker.title.len() +               // title
-        4 + $marker.description.len() +         // description
-        std::mem::size_of::<Position>() +       // position
+        4 + $description.name.len() +           // name
+        4 + $description.details.len() +        // details
         std::mem::size_of::<MarkerType>() +     // marker_type
         8 +                                     // created_at
-    8                                           // updated_at
+        8                                       // updated_at
     };
 }
 

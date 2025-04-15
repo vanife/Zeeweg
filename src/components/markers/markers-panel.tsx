@@ -8,7 +8,7 @@ import * as zeeweg from '@project/anchor'
 
 import MarkerEditor from './marker-editor'
 import type { MapViewApi } from '../map/map-view'
-import { addMarker } from '@/lib/markers'
+import { addMarker, Marker } from '@/lib/markers'
 
 type Props = {
   mapApiRef: React.MutableRefObject<MapViewApi | null>
@@ -23,18 +23,20 @@ enum PanelMode {
 
 export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }: Props) {
   const [mode, setMode] = useState<PanelMode>(PanelMode.Idle)
-  const [initialMarker, setInitialMarker] = useState<zeeweg.MarkerData | null>(null)
+  const [initialMarker, setInitialMarker] = useState<Marker | null>(null)
 
   const enterCreateMode = () => {
     const center = mapApiRef.current?.getCenter?.()
     const lat = center?.[0] ?? 0
     const lon = center?.[1] ?? 0
 
-    const newMarker: zeeweg.MarkerData = {
-      title: '',
-      description: '',
+    const newMarker: Marker = {
+      description: {
+        name: '',
+        details: '',
+        markerType: { basic: {} },
+      },
       position: { lat: Math.round(lat * 1e6), lon: Math.round(lon * 1e6) },
-      markerType: { basic: {} },
     }
 
     setInitialMarker(newMarker)
@@ -59,7 +61,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }
     setMode(PanelMode.Idle)
   }
 
-  const saveMarker = async (marker: zeeweg.MarkerData) => {
+  const saveMarker = async (marker: Marker) => {
     try {
       await addMarker(provider, marker)
     } catch (err) {

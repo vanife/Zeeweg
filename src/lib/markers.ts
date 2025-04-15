@@ -2,7 +2,12 @@ import { AnchorProvider } from '@coral-xyz/anchor'
 
 import * as zeeweg from '@project/anchor'
 
-export async function addMarker(provider: AnchorProvider, marker: zeeweg.MarkerData): Promise<string> {
+export interface Marker {
+  description: zeeweg.MarkerDescription
+  position: zeeweg.Position
+}
+
+export async function addMarker(provider: AnchorProvider, marker: Marker): Promise<string> {
   const program = zeeweg.getZeewegProgram(provider)
 
   const entryPda = zeeweg.getMarkerEntryPda(program, marker.position)
@@ -12,7 +17,7 @@ export async function addMarker(provider: AnchorProvider, marker: zeeweg.MarkerD
   const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
 
   const sig = await program.methods
-    .addMarker(marker)
+    .addMarker(marker.description, marker.position)
     .accounts({
       author: provider.wallet.publicKey,
       markerEntry: entryPda,
@@ -30,27 +35,43 @@ export async function addMarker(provider: AnchorProvider, marker: zeeweg.MarkerD
   return sig
 }
 
-export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: number; y: number }[]): Promise<zeeweg.MarkerData[]> {
+export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: number; y: number }[]): Promise<Marker[]> {
   const program = zeeweg.getZeewegProgram(provider)
 
-  // Step 1: Fetch the tile accounts for the given tiles
+  // Step 1: Get PDAs for each tile
   const tilePdas = tiles.map(tile => zeeweg.getMarkerTilePda(program, tile.x, tile.y))
+
+  // Step 2: Fetch tile accounts
   const tileAccounts = await program.account.markerTile.fetchMultiple(tilePdas)
 
+  // Step 3: Extract all marker PDAs from those tiles
   const markerPdas = tileAccounts.flatMap(tile => tile?.markers ?? [])
 
   if (markerPdas.length === 0) return []
 
-  // Step 2: Fetch the marker accounts for the given marker PDAs
-  const markerAccounts = await program.account.markerEntry.fetchMultiple(markerPdas)
+  // Step 4: Fetch marker entries
+  const markerEntries = await program.account.markerEntry.fetchMultiple(markerPdas)
 
-  // Step 3: Filter out invalid entries and return the markers
-  return markerAccounts
-    .filter((entry): entry is zeeweg.MarkerEntry => !!entry)
-    .map(entry => entry.marker)
+  // Step 5: Combine entries with decoded positions
+  const markers: Marker[] = []
+  for (let i = 0; i < markerEntries.length; i++) {
+    const entry = markerEntries[i]
+    const pda = markerPdas[i]
+
+    if (!entry) continue
+
+    const position = zeeweg.getMarkerPositionFromPda(pda)
+
+    markers.push({
+      description: entry.description,
+      position,
+    })
+  }
+
+  return markers
 }
 
-export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<zeeweg.MarkerData> {
+export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<Marker> {
   const program = zeeweg.getZeewegProgram(provider)
 
   const entryPda = zeeweg.getMarkerEntryPda(program, { lat, lon })
@@ -59,5 +80,9 @@ export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, 
   if (!markerAccount) {
     throw new Error('Marker not found')
   }
-  return markerAccount.marker as zeeweg.MarkerData
+
+  return {
+    description: markerAccount.description as zeeweg.MarkerDescription,
+    position: { lat, lon },
+  }
 }

@@ -6,7 +6,7 @@ import { fromLonLat } from 'ol/proj'
 
 import * as zeeweg from '@project/anchor'
 
-import { getMarkersForTiles, loadMarkerByLonLat } from '@/lib/markers'
+import { getMarkersForTiles, loadMarkerByLonLat, Marker } from '@/lib/markers'
 import { Settings } from '@/lib/settings'
 
 import MapView, { MapSign, MapViewApi } from '../map/map-view'
@@ -15,10 +15,10 @@ import InstrumentPanel from './markers-panel'
 
 const MAX_TILES_TO_LOAD = 512
 
-export const marker_to_sign = (marker: zeeweg.MarkerData): MapSign => {
+export const markerToSign = (marker: Marker): MapSign => {
   const lat = marker.position.lat / 1e6
   const lon = marker.position.lon / 1e6
-  const type = marker.markerType
+  const type = marker.description.markerType
 
   let iconUrl: string
   let color: string
@@ -51,8 +51,8 @@ export const marker_to_sign = (marker: zeeweg.MarkerData): MapSign => {
 
   return {
     id: `${lat}_${lon}`,
-    name: marker.title,
-    description: marker.description,
+    name: marker.description.name,
+    description: marker.description.details,
     iconUrl,
     color,
     position: [lat, lon],
@@ -76,7 +76,7 @@ export default function MarkersFeature() {
 
       for (const marker of markers) {
         try {
-          api.upsertSign(marker_to_sign(marker))
+          api.upsertSign(markerToSign(marker))
         } catch (err) {
           console.warn('Skipping unknown marker type:', marker, err)
         }
@@ -123,7 +123,7 @@ export default function MarkersFeature() {
 
     try {
       const marker = await loadMarkerByLonLat(provider, lon, lat)
-      api.upsertSign(marker_to_sign(marker))
+      api.upsertSign(markerToSign(marker))
     } catch (err) {
       console.error('Failed to load marker:', err)
     }

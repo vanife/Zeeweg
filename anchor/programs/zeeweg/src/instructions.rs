@@ -3,7 +3,8 @@ use anchor_lang::prelude::*;
 use crate::{constants::*, state::*};
 
 #[derive(Accounts)]
-#[instruction(marker: MarkerData)]
+#[instruction(description: MarkerDescription, position: Position)]
+
 pub struct AddMarker<'info> {
     #[account(mut)]
     pub author: Signer<'info>,
@@ -11,8 +12,12 @@ pub struct AddMarker<'info> {
     #[account(
         init,
         payer = author,
-        space = crate::marker_entry_space!(marker),
-        seeds = [b"marker_entry", marker.position.lat.to_le_bytes().as_ref(), marker.position.lon.to_le_bytes().as_ref()],
+        space = crate::marker_entry_space!(description),
+        seeds = [
+            b"marker_entry",
+            position.lat.to_le_bytes().as_ref(),
+            position.lon.to_le_bytes().as_ref()
+        ],
         bump
     )]
     pub marker_entry: Account<'info, MarkerEntry>,
@@ -22,7 +27,11 @@ pub struct AddMarker<'info> {
         init_if_needed,
         payer = author,
         space = crate::marker_tile_space!(MAX_MARKERS_IN_TILE),
-        seeds = [b"marker_tile", marker.position.tile(TILE_RESOLUTION).x.to_le_bytes().as_ref(), marker.position.tile(TILE_RESOLUTION).y.to_le_bytes().as_ref()],
+        seeds = [
+            b"marker_tile",
+            position.tile(TILE_RESOLUTION).x.to_le_bytes().as_ref(),
+            position.tile(TILE_RESOLUTION).y.to_le_bytes().as_ref()
+        ],
         bump
     )]
     pub marker_tile: Account<'info, MarkerTile>,
@@ -30,15 +39,19 @@ pub struct AddMarker<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn add_marker(ctx: Context<AddMarker>, marker: MarkerData) -> Result<()> {
+pub fn add_marker(
+    ctx: Context<AddMarker>,
+    description: MarkerDescription,
+    position: Position,
+) -> Result<()> {
     let marker_entry = &mut ctx.accounts.marker_entry;
     let marker_tile = &mut ctx.accounts.marker_tile;
     let now = Clock::get()?.unix_timestamp;
-    let tile = marker.position.tile(TILE_RESOLUTION);
+    let tile = position.tile(TILE_RESOLUTION);
 
     // Write marker data
     marker_entry.author = ctx.accounts.author.key();
-    marker_entry.marker = marker;
+    marker_entry.description = description;
     marker_entry.created_at = now;
     marker_entry.updated_at = now;
 

@@ -55,11 +55,11 @@ export type Zeeweg = {
               },
               {
                 "kind": "arg",
-                "path": "marker.position.lat"
+                "path": "position.lat"
               },
               {
                 "kind": "arg",
-                "path": "marker.position.lon"
+                "path": "position.lon"
               }
             ]
           }
@@ -87,11 +87,11 @@ export type Zeeweg = {
               },
               {
                 "kind": "arg",
-                "path": "marker.position.tile(TILE_RESOLUTION).x"
+                "path": "position.tile(TILE_RESOLUTION).x"
               },
               {
                 "kind": "arg",
-                "path": "marker.position.tile(TILE_RESOLUTION).y"
+                "path": "position.tile(TILE_RESOLUTION).y"
               }
             ]
           }
@@ -103,10 +103,18 @@ export type Zeeweg = {
       ],
       "args": [
         {
-          "name": "marker",
+          "name": "description",
           "type": {
             "defined": {
-              "name": "markerData"
+              "name": "markerDescription"
+            }
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "defined": {
+              "name": "position"
             }
           }
         }
@@ -150,25 +158,17 @@ export type Zeeweg = {
   ],
   "types": [
     {
-      "name": "markerData",
+      "name": "markerDescription",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "title",
+            "name": "name",
             "type": "string"
           },
           {
-            "name": "description",
+            "name": "details",
             "type": "string"
-          },
-          {
-            "name": "position",
-            "type": {
-              "defined": {
-                "name": "position"
-              }
-            }
           },
           {
             "name": "markerType",
@@ -191,10 +191,10 @@ export type Zeeweg = {
             "type": "pubkey"
           },
           {
-            "name": "marker",
+            "name": "description",
             "type": {
               "defined": {
-                "name": "markerData"
+                "name": "markerDescription"
               }
             }
           },
@@ -253,12 +253,6 @@ export type Zeeweg = {
           },
           {
             "name": "restaurant"
-          },
-          {
-            "name": "hotel"
-          },
-          {
-            "name": "hospital"
           },
           {
             "name": "hazard"

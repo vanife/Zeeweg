@@ -36,17 +36,17 @@ export interface Position {
   lon: number // in microdegrees ( degrees * 1e6)
 }
 
-// This is the marker data type, should match MarkerData from state.rs
-export interface MarkerData {
-  title: string
-  description: string
-  position: Position
+// This is the marker data type, should match MarkerDescription from state.rs
+export interface MarkerDescription {
+  name: string
+  details: string
   markerType: MarkerType
 }
 
+// This is the marker entry type, should match MarkerEntry from state.rs
 export interface MarkerEntry {
   author: PublicKey
-  marker: MarkerData
+  description: MarkerDescription
   createdAt: BN
   updatedAt: BN
 }
@@ -62,6 +62,14 @@ export function getMarkerEntryPda(program: Program<Zeeweg>, position: Position):
     program.programId
   )
   return entryPda
+}
+
+// Get positioin from MarkerEntry PDA
+export function getMarkerPositionFromPda(pda: PublicKey): Position {
+  const bytes = pda.toBuffer()
+  const lat = bytes.readInt32LE(16) // offset: 8 (seed header) + 8 (marker_entry)
+  const lon = bytes.readInt32LE(20)
+  return { lat, lon }
 }
 
 // MarkerTile PDA depends on the position (lat, lon) dvided by the tile resolution

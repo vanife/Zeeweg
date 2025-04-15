@@ -13,7 +13,11 @@ use instructions::*;
 pub mod zeeweg {
     use super::*;
 
-    pub fn add_marker(ctx: Context<AddMarker>, marker: state::MarkerData) -> Result<()> {
-        instructions::add_marker(ctx, marker)
+    pub fn add_marker(
+        ctx: Context<AddMarker>,
+        description: state::MarkerDescription,
+        position: state::Position,
+    ) -> Result<()> {
+        instructions::add_marker(ctx, description, position)
     }
 }

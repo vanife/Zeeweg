@@ -49,11 +49,11 @@
               },
               {
                 "kind": "arg",
-                "path": "marker.position.lat"
+                "path": "position.lat"
               },
               {
                 "kind": "arg",
-                "path": "marker.position.lon"
+                "path": "position.lon"
               }
             ]
           }
@@ -81,11 +81,11 @@
               },
               {
                 "kind": "arg",
-                "path": "marker.position.tile(TILE_RESOLUTION).x"
+                "path": "position.tile(TILE_RESOLUTION).x"
               },
               {
                 "kind": "arg",
-                "path": "marker.position.tile(TILE_RESOLUTION).y"
+                "path": "position.tile(TILE_RESOLUTION).y"
               }
             ]
           }
@@ -97,10 +97,18 @@
       ],
       "args": [
         {
-          "name": "marker",
+          "name": "description",
           "type": {
             "defined": {
-              "name": "MarkerData"
+              "name": "MarkerDescription"
+            }
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "defined": {
+              "name": "Position"
             }
           }
         }
@@ -144,25 +152,17 @@
   ],
   "types": [
     {
-      "name": "MarkerData",
+      "name": "MarkerDescription",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "title",
+            "name": "name",
             "type": "string"
           },
           {
-            "name": "description",
+            "name": "details",
             "type": "string"
-          },
-          {
-            "name": "position",
-            "type": {
-              "defined": {
-                "name": "Position"
-              }
-            }
           },
           {
             "name": "marker_type",
@@ -185,10 +185,10 @@
             "type": "pubkey"
           },
           {
-            "name": "marker",
+            "name": "description",
             "type": {
               "defined": {
-                "name": "MarkerData"
+                "name": "MarkerDescription"
               }
             }
           },
@@ -247,12 +247,6 @@
           },
           {
             "name": "Restaurant"
-          },
-          {
-            "name": "Hotel"
-          },
-          {
-            "name": "Hospital"
           },
           {
             "name": "Hazard"

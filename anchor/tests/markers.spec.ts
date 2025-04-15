@@ -19,10 +19,9 @@ describe('markers', () => {
   const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
 
   it('adds a single marker and fails to add this marker again', async () => {
-    const marker: zeeweg.MarkerData = {
-      title: 'Pinxo Restaurant',
-      description: 'Traditional Basque tapas',
-      position: basePosition,
+    const description: zeeweg.MarkerDescription = {
+      name: 'Pinxo Restaurant',
+      details: 'Traditional Basque tapas',
       markerType: { restaurant: {} },
     }
 
@@ -30,7 +29,7 @@ describe('markers', () => {
 
     // Add the marker first time
     const sig = await program.methods
-      .addMarker(marker)
+      .addMarker(description, basePosition)
       .accounts({
         author: alice,
         markerEntry: entryPda,
@@ -44,10 +43,7 @@ describe('markers', () => {
     // Validate entry account
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
-    assert.strictEqual(entryAccount.marker.title, marker.title)
-    assert.strictEqual(entryAccount.marker.description, marker.description)
-    assert.deepStrictEqual(entryAccount.marker.position, basePosition)
-    assert.deepStrictEqual(entryAccount.marker.markerType, marker.markerType)
+    assert.deepEqual(entryAccount.description, description)
 
     // Validate tile account
     const tileAccount = await program.account.markerTile.fetch(tilePda)
@@ -58,7 +54,7 @@ describe('markers', () => {
     // Try to add the same marker again
     try {
       await program.methods
-        .addMarker(marker)
+        .addMarker(description, basePosition)
         .accounts({
           author: alice,
           markerEntry: entryPda,
@@ -83,10 +79,9 @@ describe('markers', () => {
     // Create a new marker for Bob
     const positionBob = { lat: basePosition.lat + 1, lon: basePosition.lon + 1 }
 
-    const marker: zeeweg.MarkerData = {
-      title: 'Bob marker',
-      description: 'Bob was here too',
-      position: positionBob,
+    const description: zeeweg.MarkerDescription = {
+      name: 'Bob marker',
+      details: 'Bob was here too',
       markerType: { beach: {} },
     }
 
@@ -94,7 +89,7 @@ describe('markers', () => {
 
     // Add new marker from bob's account
     const sig = await program.methods
-      .addMarker(marker)
+      .addMarker(description, positionBob)
       .accounts({
         author: bob,
         markerEntry: entryPda,
@@ -109,10 +104,7 @@ describe('markers', () => {
     // Validate entry account
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
     assert.strictEqual(entryAccount.author.toBase58(), bob.toBase58())
-    assert.strictEqual(entryAccount.marker.title, marker.title)
-    assert.strictEqual(entryAccount.marker.description, marker.description)
-    assert.deepStrictEqual(entryAccount.marker.position, positionBob)
-    assert.deepStrictEqual(entryAccount.marker.markerType, marker.markerType)
+    assert.deepEqual(entryAccount.description, description)
 
     // Validate tile account
     const tileAccount = await program.account.markerTile.fetch(tilePda)
