@@ -23,14 +23,13 @@ describe('markers', () => {
   const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
   const entryPda = zeeweg.getMarkerEntryPda(program, basePosition)
 
-  it('adds a single marker and fails to add this marker again', async () => {
-    const description: zeeweg.MarkerDescription = {
-      name: 'Pinxo Restaurant',
-      details: 'Traditional Basque tapas',
-      markerType: { restaurant: {} },
-    }
+  const description: zeeweg.MarkerDescription = {
+    name: 'Pinxo Restaurant',
+    details: 'Traditional Basque tapas',
+    markerType: { restaurant: {} },
+  }
 
-    // Add the marker first time
+  it('Alice adds a single marker', async () => {
     const sig = await program.methods
       .addMarker(description, basePosition)
       .accounts({
@@ -51,25 +50,65 @@ describe('markers', () => {
     assert.strictEqual(tileAccount.tile.x, tileX)
     assert.strictEqual(tileAccount.tile.y, tileY)
     assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(entryPda)))
-
-    // Try to add the same marker again
-    try {
-      await program.methods
-        .addMarker(description, basePosition)
-        .accounts({
-          author: alice,
-          markerEntry: entryPda,
-          markerTile: tilePda,
-        } as any)
-        .rpc()
-      assert.fail('Expected marker creation to fail but it succeeded')
-    } catch (err: any) {
-      const logs = err.logs?.join('\n') || err.toString()
-      assert.ok(logs.includes('already in use'), 'Expected already in use error')
-    }
   })
 
-  it('bob adds a marker in the same tile after alice', async () => {
+  it('Alice fails to add the same marker again', async () => {
+    const attempt = program.methods
+      .addMarker(description, basePosition)
+      .accounts({
+        author: alice,
+        markerEntry: entryPda,
+        markerTile: tilePda,
+      } as any)
+      .rpc()
+
+    await expect(attempt).rejects.toThrow(/already in use/i)
+  })
+
+  const updatedDescription: zeeweg.MarkerDescription = {
+    name: 'Artxanda',
+    details: 'Mountain Peak 251 m',
+    markerType: { mountainPeak: {} },
+  }
+
+  it('Bob fails to update a marker created by Alice', async () => {
+    const attempt = program.methods
+      .updateMarker(updatedDescription, basePosition)
+      .accounts({
+        author: bob,
+        markerEntry: entryPda,
+        markerTile: tilePda,
+      })
+      .signers([bobKeypair])
+      .rpc()
+
+    // Assert: should throw with has_one = author constraint violation
+    await expect(attempt).rejects.toThrow(/has one constraint was violated/i)
+
+    // Should not be updated
+    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
+    assert.deepEqual(entryAccount.description, description)
+  })
+
+  it('Alice updates the initial marker', async () => {
+    const sig = await program.methods
+      .updateMarker(updatedDescription, basePosition)
+      .accounts({
+        author: alice,
+        markerEntry: entryPda,
+        markerTile: tilePda,
+      })
+      .rpc()
+    helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
+
+    // Should not be updated
+    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
+    assert.deepEqual(entryAccount.description, updatedDescription)
+  })
+
+  it('Bob adds a marker in the same tile after Alice', async () => {
     // Airdrop 1 SOL to Bob's account
     await helpers.airdrop(provider.connection, bob, 1000000000)
 
@@ -108,7 +147,7 @@ describe('markers', () => {
     assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(bobEntryPda)))
   })
 
-  it('bob fails to delete a marker created by alice', async () => {
+  it('Bob fails to delete a marker created by Alice', async () => {
     const attempt = program.methods
       .deleteMarker(basePosition)
       .accounts({
@@ -127,7 +166,7 @@ describe('markers', () => {
     expect(stillExists).not.toBeNull()
   })
 
-  it('alice deletes her own marker', async () => {
+  it('Alice deletes her own marker', async () => {
     // Delete the marker
     const sig = await program.methods
       .deleteMarker(basePosition)

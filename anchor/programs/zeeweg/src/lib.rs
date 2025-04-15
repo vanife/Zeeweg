@@ -21,6 +21,14 @@ pub mod zeeweg {
         instructions::add_marker(ctx, description, position)
     }
 
+    pub fn update_marker(
+        ctx: Context<UpdateMarker>,
+        description: state::MarkerDescription,
+        position: state::Position,
+    ) -> Result<()> {
+        instructions::update_marker(ctx, description, position)
+    }
+
     pub fn delete_marker(ctx: Context<DeleteMarker>, position: state::Position) -> Result<()> {
         instructions::delete_marker(ctx, position)
     }

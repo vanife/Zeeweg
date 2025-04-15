@@ -221,6 +221,84 @@ export type Zeeweg = {
           }
         }
       ]
+    },
+    {
+      "name": "updateMarker",
+      "discriminator": [
+        166,
+        160,
+        13,
+        210,
+        202,
+        44,
+        188,
+        90
+      ],
+      "accounts": [
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "markerEntry"
+          ]
+        },
+        {
+          "name": "markerEntry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "position.lat"
+              },
+              {
+                "kind": "arg",
+                "path": "position.lon"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "description",
+          "type": {
+            "defined": {
+              "name": "markerDescription"
+            }
+          }
+        },
+        {
+          "name": "position",
+          "type": {
+            "defined": {
+              "name": "position"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
