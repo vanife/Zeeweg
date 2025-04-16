@@ -75,7 +75,7 @@ export default function MapView({ apiRef, center, zoom, onViewportChanged }: Pro
           image: new Icon({
             src: feature.get('iconUrl'),
             color: feature.get('color'),
-            scale: feature.get('isHovered') ? 1.1 : 1,
+            scale: feature.get('isHovered') ? 1.2 : 1.0,
           }),
         })
       },
