@@ -373,6 +373,14 @@
             }
           },
           {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "Position"
+              }
+            }
+          },
+          {
             "name": "created_at",
             "type": "i64"
           },

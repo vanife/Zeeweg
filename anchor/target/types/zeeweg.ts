@@ -379,6 +379,14 @@ export type Zeeweg = {
             }
           },
           {
+            "name": "position",
+            "type": {
+              "defined": {
+                "name": "position"
+              }
+            }
+          },
+          {
             "name": "createdAt",
             "type": "i64"
           },

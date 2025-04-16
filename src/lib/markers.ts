@@ -53,22 +53,12 @@ export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: n
   const markerEntries = await program.account.markerEntry.fetchMultiple(markerPdas)
 
   // Step 5: Combine entries with decoded positions
-  const markers: Marker[] = []
-  for (let i = 0; i < markerEntries.length; i++) {
-    const entry = markerEntries[i]
-    const pda = markerPdas[i]
-
-    if (!entry) continue
-
-    const position = zeeweg.getMarkerPositionFromPda(pda)
-
-    markers.push({
+  return markerEntries
+    .filter((entry): entry is zeeweg.MarkerEntry => !!entry)
+    .map((entry) => ({
       description: entry.description,
-      position,
-    })
-  }
-
-  return markers
+      position: entry.position,
+    }))
 }
 
 export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<Marker> {
@@ -83,6 +73,6 @@ export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, 
 
   return {
     description: markerAccount.description as zeeweg.MarkerDescription,
-    position: { lat, lon },
+    position: markerAccount.position as zeeweg.Position,
   }
 }

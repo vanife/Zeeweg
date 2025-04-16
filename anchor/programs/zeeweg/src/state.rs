@@ -48,6 +48,7 @@ pub struct MarkerDescription {
 pub struct MarkerEntry {
     pub author: Pubkey,
     pub description: MarkerDescription,
+    pub position: Position,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -55,7 +56,7 @@ pub struct MarkerEntry {
 #[account]
 pub struct MarkerTile {
     pub tile: Tile,
-    pub markers: Vec<Pubkey>, // PDAs of markers in this tile
+    pub markers: Vec<Pubkey>, // PDAs of marker entries in this tile
 }
 
 impl Position {
@@ -75,6 +76,7 @@ macro_rules! marker_entry_space {
         4 + $description.name.len() +           // name
         4 + $description.details.len() +        // details
         std::mem::size_of::<MarkerType>() +     // marker_type
+        std::mem::size_of::<Position>() +       // position
         8 +                                     // created_at
         8                                       // updated_at
     };

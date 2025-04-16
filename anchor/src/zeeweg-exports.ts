@@ -47,6 +47,7 @@ export interface MarkerDescription {
 export interface MarkerEntry {
   author: PublicKey
   description: MarkerDescription
+  position: Position
   createdAt: BN
   updatedAt: BN
 }
@@ -62,14 +63,6 @@ export function getMarkerEntryPda(program: Program<Zeeweg>, position: Position):
     program.programId
   )
   return entryPda
-}
-
-// Get positioin from MarkerEntry PDA
-export function getMarkerPositionFromPda(pda: PublicKey): Position {
-  const bytes = pda.toBuffer()
-  const lat = bytes.readInt32LE(16) // offset: 8 (seed header) + 8 (marker_entry)
-  const lon = bytes.readInt32LE(20)
-  return { lat, lon }
 }
 
 // MarkerTile PDA depends on the position (lat, lon) dvided by the tile resolution

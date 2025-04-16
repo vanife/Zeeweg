@@ -44,6 +44,7 @@ describe('markers', () => {
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
     assert.deepEqual(entryAccount.description, description)
+    assert.deepEqual(entryAccount.position, basePosition)
 
     // Validate tile account
     let tileAccount = await program.account.markerTile.fetch(tilePda)
@@ -85,10 +86,11 @@ describe('markers', () => {
     // Assert: should throw with has_one = author constraint violation
     await expect(attempt).rejects.toThrow(/has one constraint was violated/i)
 
-    // Should not be updated
+    // Should NOT be updated
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
     assert.deepEqual(entryAccount.description, description)
+    assert.deepEqual(entryAccount.position, basePosition)
   })
 
   it('Alice updates the initial marker', async () => {
@@ -102,10 +104,11 @@ describe('markers', () => {
       .rpc()
     helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
-    // Should not be updated
+    // Should be updated
     const entryAccount = await program.account.markerEntry.fetch(entryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
     assert.deepEqual(entryAccount.description, updatedDescription)
+    assert.deepEqual(entryAccount.position, basePosition)
   })
 
   it('Bob adds a marker in the same tile after Alice', async () => {
@@ -139,6 +142,7 @@ describe('markers', () => {
     const entryAccount = await program.account.markerEntry.fetch(bobEntryPda)
     assert.strictEqual(entryAccount.author.toBase58(), bob.toBase58())
     assert.deepEqual(entryAccount.description, description)
+    assert.deepEqual(entryAccount.position, positionBob)
 
     // Validate tile account
     const tileAccount = await program.account.markerTile.fetch(tilePda)
