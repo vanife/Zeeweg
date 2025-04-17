@@ -43,6 +43,9 @@ jobs:
       - name: Check solana config
         run: solana config get
 
+      - name: Downgrade proc-macro2 craete (temporary)
+        run: cargo update -p proc-macro2 --precise 1.0.94 --manifest-path anchor/Cargo.toml
+
       - run: pnpm run anchor build
         shell: bash
 
