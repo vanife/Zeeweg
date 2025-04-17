@@ -16,12 +16,17 @@ describe('markers', () => {
   const bob = bobKeypair.publicKey
 
   // Base position for the marker and tile
-  const basePosition: zeeweg.Position = { lat: 43160889, lon: -2934364 } // Bilbao
-  const tileX = Math.floor(basePosition.lat / zeeweg.MARKER_TILE_RESOLUTION)
-  const tileY = Math.floor(basePosition.lon / zeeweg.MARKER_TILE_RESOLUTION)
+  const positionAlice: zeeweg.Position = { lat: 43160889, lon: -2934364 } // Bilbao
+  const positionBob = { lat: positionAlice.lat + 1, lon: positionAlice.lon + 1 }
+  const tileX = Math.floor(positionAlice.lat / zeeweg.MARKER_TILE_RESOLUTION)
+  const tileY = Math.floor(positionAlice.lon / zeeweg.MARKER_TILE_RESOLUTION)
 
+  // Calculate the PDAs 
   const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
-  const entryPda = zeeweg.getMarkerEntryPda(program, basePosition)
+  const aliceEntryPda = zeeweg.getMarkerEntryPda(program, positionAlice)
+  const aliceAuthorPda = zeeweg.getMarkerAuthorPda(program, alice)
+  const bobEntryPda = zeeweg.getMarkerEntryPda(program, positionBob)
+  const bobAuthorPda = zeeweg.getMarkerAuthorPda(program, bob)
 
   const description: zeeweg.MarkerDescription = {
     name: 'Pinxo Restaurant',
@@ -29,36 +34,42 @@ describe('markers', () => {
     markerType: { restaurant: {} },
   }
 
-  it('Alice adds a single marker', async () => {
+  it('Alice adds the initial marker', async () => {
     const sig = await program.methods
-      .addMarker(description, basePosition)
+      .addMarker(description, positionAlice)
       .accounts({
         author: alice,
-        markerEntry: entryPda,
+        markerEntry: aliceEntryPda,
         markerTile: tilePda,
+        markerAuthor: aliceAuthorPda,
       } as any)
       .rpc()
     helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
     // Validate entry account
-    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    const entryAccount = await program.account.markerEntry.fetch(aliceEntryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
     assert.deepEqual(entryAccount.description, description)
-    assert.deepEqual(entryAccount.position, basePosition)
+    assert.deepEqual(entryAccount.position, positionAlice)
 
     // Validate tile account
     let tileAccount = await program.account.markerTile.fetch(tilePda)
     assert.strictEqual(tileAccount.tile.x, tileX)
     assert.strictEqual(tileAccount.tile.y, tileY)
-    assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(entryPda)))
+    assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(aliceEntryPda)))
+
+    // Validate author account
+    let authorAccount = await program.account.markerAuthor.fetch(aliceAuthorPda)
+    assert.strictEqual(authorAccount.author.toBase58(), alice.toBase58())
+    assert.deepEqual(authorAccount.markers, [aliceEntryPda])
   })
 
   it('Alice fails to add the same marker again', async () => {
     const attempt = program.methods
-      .addMarker(description, basePosition)
+      .addMarker(description, positionAlice)
       .accounts({
         author: alice,
-        markerEntry: entryPda,
+        markerEntry: aliceEntryPda,
         markerTile: tilePda,
       } as any)
       .rpc()
@@ -72,13 +83,12 @@ describe('markers', () => {
     markerType: { mountainPeak: {} },
   }
 
-  it('Bob fails to update a marker created by Alice', async () => {
+  it('Bob fails to update the marker created by Alice', async () => {
     const attempt = program.methods
-      .updateMarker(updatedDescription, basePosition)
+      .updateMarker(updatedDescription, positionAlice)
       .accounts({
         author: bob,
-        markerEntry: entryPda,
-        markerTile: tilePda,
+        markerEntry: aliceEntryPda,
       })
       .signers([bobKeypair])
       .rpc()
@@ -87,28 +97,27 @@ describe('markers', () => {
     await expect(attempt).rejects.toThrow(/has one constraint was violated/i)
 
     // Should NOT be updated
-    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    const entryAccount = await program.account.markerEntry.fetch(aliceEntryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
     assert.deepEqual(entryAccount.description, description)
-    assert.deepEqual(entryAccount.position, basePosition)
+    assert.deepEqual(entryAccount.position, positionAlice)
   })
 
   it('Alice updates the initial marker', async () => {
     const sig = await program.methods
-      .updateMarker(updatedDescription, basePosition)
+      .updateMarker(updatedDescription, positionAlice)
       .accounts({
         author: alice,
-        markerEntry: entryPda,
-        markerTile: tilePda,
+        markerEntry: aliceEntryPda,
       })
       .rpc()
     helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
     // Should be updated
-    const entryAccount = await program.account.markerEntry.fetch(entryPda)
+    const entryAccount = await program.account.markerEntry.fetch(aliceEntryPda)
     assert.strictEqual(entryAccount.author.toBase58(), alice.toBase58())
     assert.deepEqual(entryAccount.description, updatedDescription)
-    assert.deepEqual(entryAccount.position, basePosition)
+    assert.deepEqual(entryAccount.position, positionAlice)
   })
 
   it('Bob adds a marker in the same tile after Alice', async () => {
@@ -116,15 +125,11 @@ describe('markers', () => {
     await helpers.airdrop(provider.connection, bob, 1000000000)
 
     // Create a new marker for Bob
-    const positionBob = { lat: basePosition.lat + 1, lon: basePosition.lon + 1 }
-
     const description: zeeweg.MarkerDescription = {
       name: 'Bob marker',
       details: 'Bob was here too',
       markerType: { beach: {} },
     }
-
-    const bobEntryPda = zeeweg.getMarkerEntryPda(program, positionBob)
 
     // Add new marker from bob's account
     const sig = await program.methods
@@ -133,6 +138,7 @@ describe('markers', () => {
         author: bob,
         markerEntry: bobEntryPda,
         markerTile: tilePda,
+        markerAuthor: bobAuthorPda,
       } as any)
       .signers([bobKeypair])
       .rpc()
@@ -149,14 +155,19 @@ describe('markers', () => {
     assert.strictEqual(tileAccount.tile.x, tileX)
     assert.strictEqual(tileAccount.tile.y, tileY)
     assert.ok(tileAccount.markers.some((m: anchor.web3.PublicKey) => m.equals(bobEntryPda)))
+
+    // Validate author account
+    let authorAccount = await program.account.markerAuthor.fetch(bobAuthorPda)
+    assert.strictEqual(authorAccount.author.toBase58(), bob.toBase58())
+    assert.deepEqual(authorAccount.markers, [bobEntryPda])
   })
 
   it('Bob fails to delete a marker created by Alice', async () => {
     const attempt = program.methods
-      .deleteMarker(basePosition)
+      .deleteMarker(positionAlice)
       .accounts({
         author: bob,
-        markerEntry: entryPda,
+        markerEntry: aliceEntryPda,
         markerTile: tilePda,
       })
       .signers([bobKeypair])
@@ -166,26 +177,51 @@ describe('markers', () => {
     await expect(attempt).rejects.toThrow(/has one constraint was violated/i)
 
     // Confirm marker still exists
-    const stillExists = await program.account.markerEntry.fetchNullable(entryPda)
+    const stillExists = await program.account.markerEntry.fetchNullable(aliceEntryPda)
     expect(stillExists).not.toBeNull()
   })
 
   it('Alice deletes her own marker', async () => {
-    // Delete the marker
     const sig = await program.methods
-      .deleteMarker(basePosition)
+      .deleteMarker(positionAlice)
       .accounts({
         author: alice,
-        markerEntry: entryPda,
+        markerEntry: aliceEntryPda,
         markerTile: tilePda,
-      } as any)
+      })
       .rpc()
     helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
 
-    const deletedAccount = await program.account.markerEntry.fetchNullable(entryPda)
+    const deletedAccount = await program.account.markerEntry.fetchNullable(aliceEntryPda)
     expect(deletedAccount).toBeNull()
 
     const tileAccount = await program.account.markerTile.fetch(tilePda)
-    expect(tileAccount.markers).not.toContainEqual(entryPda)
+    expect(tileAccount.markers).not.toContainEqual(aliceEntryPda)
+
+    const authorAccount = await program.account.markerAuthor.fetch(aliceAuthorPda)
+    expect(authorAccount.markers).not.toContainEqual(aliceEntryPda)
+  })
+
+  it('Bob deletes his own marker', async () => {
+    const sig = await program.methods
+      .deleteMarker(positionBob)
+      .accounts({
+        author: bob,
+        markerEntry: bobEntryPda,
+        markerTile: tilePda,
+        markerAuthor: bobAuthorPda,
+      })
+      .signers([bobKeypair])
+      .rpc()
+    helpers.confirmTransactionWithLatestBlockhash(provider.connection, sig)
+
+    const deletedAccount = await program.account.markerEntry.fetchNullable(bobEntryPda)
+    expect(deletedAccount).toBeNull()
+
+    const tileAccount = await program.account.markerTile.fetch(tilePda)
+    expect(tileAccount.markers).not.toContainEqual(bobEntryPda)
+
+    const authorAccount = await program.account.markerAuthor.fetch(bobAuthorPda)
+    expect(authorAccount.markers).not.toContainEqual(bobEntryPda)
   })
 })

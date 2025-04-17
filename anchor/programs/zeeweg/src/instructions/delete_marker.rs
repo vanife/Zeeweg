@@ -32,15 +32,28 @@ pub struct DeleteMarker<'info> {
     )]
     pub marker_tile: Account<'info, MarkerTile>,
 
+    #[account(
+        mut,
+        seeds = [b"marker_author", author.key().as_ref()],
+        bump
+    )]
+    pub marker_author: Account<'info, MarkerAuthor>,
+
     pub system_program: Program<'info, System>,
 }
 
 pub fn delete_marker(ctx: Context<DeleteMarker>, _position: Position) -> Result<()> {
-    let marker_tile = &mut ctx.accounts.marker_tile;
-    let marker_entry_key = ctx.accounts.marker_entry.key();
+    let marker_key = ctx.accounts.marker_entry.key();
 
-    // Remove marker from tile
-    marker_tile.markers.retain(|key| key != &marker_entry_key);
+    // Remove from tile index
+    let marker_tile = &mut ctx.accounts.marker_tile;
+    marker_tile.markers.retain(|key| key != &marker_key);
+
+    // Remove from author index
+    let marker_author = &mut ctx.accounts.marker_author;
+    marker_author.markers.retain(|key| key != &marker_key);
+
+    // NOTE: don't close empty marker_tile and marker_author accounts for now
 
     // marker_entry is closed automatically by #[account(close = author)]
     Ok(())

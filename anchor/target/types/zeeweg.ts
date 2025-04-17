@@ -97,6 +97,36 @@ export type Zeeweg = {
           }
         },
         {
+          "name": "markerAuthor",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              }
+            ]
+          }
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
@@ -207,6 +237,36 @@ export type Zeeweg = {
           }
         },
         {
+          "name": "markerAuthor",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              }
+            ]
+          }
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
@@ -303,6 +363,19 @@ export type Zeeweg = {
   ],
   "accounts": [
     {
+      "name": "markerAuthor",
+      "discriminator": [
+        208,
+        93,
+        205,
+        129,
+        122,
+        162,
+        49,
+        134
+      ]
+    },
+    {
       "name": "markerEntry",
       "discriminator": [
         155,
@@ -338,7 +411,31 @@ export type Zeeweg = {
   ],
   "types": [
     {
+      "name": "markerAuthor",
+      "docs": [
+        "MarkerAuthor is a PDA that stores mapping author -> markers."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "markers",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "markerDescription",
+      "docs": [
+        "MarkerDescription holds metadata about a marker, including its name, details, and type."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -363,6 +460,9 @@ export type Zeeweg = {
     },
     {
       "name": "markerEntry",
+      "docs": [
+        "MarkerEntry is a PDA that stores the marker's author, metadata, position on the map and timestamps."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -399,6 +499,9 @@ export type Zeeweg = {
     },
     {
       "name": "markerTile",
+      "docs": [
+        "MarkerTile is a PDA that stores mapping tile -> markers."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -421,6 +524,9 @@ export type Zeeweg = {
     },
     {
       "name": "markerType",
+      "docs": [
+        "MarkerType enum representing different types of markers."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -471,7 +577,7 @@ export type Zeeweg = {
     {
       "name": "tile",
       "docs": [
-        "Each tile represents a fixed-size square region on the map,",
+        "Tile represents a fixed-size square region on the map,",
         "defined by a resolution in microdegrees (e.g. 100_000 = 0.1°).",
         "",
         "For example, given:",

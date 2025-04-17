@@ -8,7 +8,7 @@ pub struct Position {
     pub lon: i32,
 }
 
-/// Each tile represents a fixed-size square region on the map,
+/// Tile represents a fixed-size square region on the map,
 /// defined by a resolution in microdegrees (e.g. 100_000 = 0.1°).
 ///
 /// For example, given:
@@ -26,6 +26,7 @@ pub struct Tile {
     pub y: i32,
 }
 
+/// MarkerType enum representing different types of markers.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub enum MarkerType {
     Basic,
@@ -37,6 +38,7 @@ pub enum MarkerType {
     Hazard,
 }
 
+/// MarkerDescription holds metadata about a marker, including its name, details, and type.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
 pub struct MarkerDescription {
     pub name: String,
@@ -44,6 +46,7 @@ pub struct MarkerDescription {
     pub marker_type: MarkerType,
 }
 
+/// MarkerEntry is a PDA that stores the marker's author, metadata, position on the map and timestamps.
 #[account]
 pub struct MarkerEntry {
     pub author: Pubkey,
@@ -53,9 +56,17 @@ pub struct MarkerEntry {
     pub updated_at: i64,
 }
 
+/// MarkerTile is a PDA that stores mapping tile -> markers.
 #[account]
 pub struct MarkerTile {
     pub tile: Tile,
+    pub markers: Vec<Pubkey>, // PDAs of marker entries in this tile
+}
+
+/// MarkerAuthor is a PDA that stores mapping author -> markers.
+#[account]
+pub struct MarkerAuthor {
+    pub author: Pubkey,
     pub markers: Vec<Pubkey>, // PDAs of marker entries in this tile
 }
 
@@ -77,8 +88,8 @@ macro_rules! marker_entry_space {
         4 + $description.details.len() +        // details
         std::mem::size_of::<MarkerType>() +     // marker_type
         std::mem::size_of::<Position>() +       // position
-        8 +                                     // created_at
-        8                                       // updated_at
+        8 +                                     // created_at: i64
+        8                                       // updated_at: i64
     };
 }
 
@@ -87,6 +98,15 @@ macro_rules! marker_tile_space {
     ($max_markers:expr) => {
         8 +                                     // discriminator
         std::mem::size_of::<Tile>() +           // tile
+        4 + ($max_markers * 32)                 // Vec<Pubkey>: 4-byte length + 32 bytes per pubkey
+    };
+}
+
+#[macro_export]
+macro_rules! marker_author_space {
+    ($max_markers:expr) => {
+        8 +                                     // discriminator
+        32 +                                    // author: Pubkey
         4 + ($max_markers * 32)                 // Vec<Pubkey>: 4-byte length + 32 bytes per pubkey
     };
 }

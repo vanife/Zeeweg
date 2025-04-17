@@ -91,6 +91,36 @@
           }
         },
         {
+          "name": "marker_author",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              }
+            ]
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -201,6 +231,36 @@
           }
         },
         {
+          "name": "marker_author",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  114,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "author"
+              }
+            ]
+          }
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
@@ -297,6 +357,19 @@
   ],
   "accounts": [
     {
+      "name": "MarkerAuthor",
+      "discriminator": [
+        208,
+        93,
+        205,
+        129,
+        122,
+        162,
+        49,
+        134
+      ]
+    },
+    {
       "name": "MarkerEntry",
       "discriminator": [
         155,
@@ -332,7 +405,31 @@
   ],
   "types": [
     {
+      "name": "MarkerAuthor",
+      "docs": [
+        "MarkerAuthor is a PDA that stores mapping author -> markers."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "author",
+            "type": "pubkey"
+          },
+          {
+            "name": "markers",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "MarkerDescription",
+      "docs": [
+        "MarkerDescription holds metadata about a marker, including its name, details, and type."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -357,6 +454,9 @@
     },
     {
       "name": "MarkerEntry",
+      "docs": [
+        "MarkerEntry is a PDA that stores the marker's author, metadata, position on the map and timestamps."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -393,6 +493,9 @@
     },
     {
       "name": "MarkerTile",
+      "docs": [
+        "MarkerTile is a PDA that stores mapping tile -> markers."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -415,6 +518,9 @@
     },
     {
       "name": "MarkerType",
+      "docs": [
+        "MarkerType enum representing different types of markers."
+      ],
       "type": {
         "kind": "enum",
         "variants": [
@@ -465,7 +571,7 @@
     {
       "name": "Tile",
       "docs": [
-        "Each tile represents a fixed-size square region on the map,",
+        "Tile represents a fixed-size square region on the map,",
         "defined by a resolution in microdegrees (e.g. 100_000 = 0.1°).",
         "",
         "For example, given:",

@@ -65,7 +65,8 @@ export function getMarkerEntryPda(program: Program<Zeeweg>, position: Position):
   return entryPda
 }
 
-// MarkerTile PDA depends on the position (lat, lon) dvided by the tile resolution
+// MarkerTile PDA depends on the tile X and Y coordinates
+// Tile coordinates are calculated by dividing the lat/lon by the tile resolution
 export function getMarkerTilePda(program: Program<Zeeweg>, tileX: number, tileY: number): PublicKey {
   const [tilePda] = anchor.web3.PublicKey.findProgramAddressSync(
     [
@@ -76,4 +77,13 @@ export function getMarkerTilePda(program: Program<Zeeweg>, tileX: number, tileY:
     program.programId
   )
   return tilePda
+}
+
+// MarkerAuthor PDA depends on the author public key
+export function getMarkerAuthorPda(program: Program<Zeeweg>, author: PublicKey): PublicKey {
+  const [authorPda] = anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from('marker_author'), author.toBuffer()],
+    program.programId
+  )
+  return authorPda
 }
