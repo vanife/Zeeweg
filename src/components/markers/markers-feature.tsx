@@ -6,58 +6,15 @@ import { fromLonLat } from 'ol/proj'
 
 import * as zeeweg from '@project/anchor'
 
-import { getMarkersForTiles, loadMarkerByLonLat, Marker } from '@/lib/markers'
+import { getMarkersByTiles, getMarkerByLonLat, Marker } from '@/lib/markers'
 import { Settings } from '@/lib/settings'
 
-import MapView, { MapSign, MapViewApi } from '../map/map-view'
+import MapView, { MapViewApi } from '../map/map-view'
 import { useAnchorProvider } from '../solana/solana-provider'
 import InstrumentPanel from './markers-panel'
+import { markerToSign } from '@/components/map/map-markers'
 
 const MAX_TILES_TO_LOAD = 512
-
-export const markerToSign = (marker: Marker): MapSign => {
-  const lat = marker.position.lat / 1e6
-  const lon = marker.position.lon / 1e6
-  const type = marker.description.markerType
-
-  let iconUrl: string
-  let color: string
-
-  if ('basic' in type) {
-    iconUrl = '/map/marker-basic.svg'
-    color = '#757575' // gray
-  } else if ('park' in type) {
-    iconUrl = '/map/marker-park.svg'
-    color = '#4CAF50' // green
-  } else if ('beach' in type) {
-    iconUrl = '/map/marker-beach.svg'
-    color = '#03A9F4' // light blue
-  } else if ('mountainPeak' in type) {
-    iconUrl = '/map/marker-peak.svg'
-    color = '#9C27B0' // purple
-  } else if ('historical' in type) {
-    iconUrl = '/map/marker-historical.svg'
-    color = '#795548' // brown
-  } else if ('restaurant' in type) {
-    iconUrl = '/map/marker-restaurant.svg'
-    color = '#F44336' // red
-  } else if ('hazard' in type) {
-    iconUrl = '/map/marker-hazard.svg'
-    color = '#FF9800' // orange
-  } else {
-    // Exhaustive guard
-    throw new Error('Unknown marker type')
-  }
-
-  return {
-    id: `${lat}_${lon}`,
-    name: marker.description.name,
-    description: marker.description.details,
-    iconUrl,
-    color,
-    position: [lat, lon],
-  }
-}
 
 export default function MarkersFeature() {
   const saved = Settings.getMapSettings()
@@ -69,7 +26,7 @@ export default function MarkersFeature() {
 
   const loadMarkers = async (tiles: { x: number; y: number }[]) => {
     try {
-      const markers = await getMarkersForTiles(provider, tiles)
+      const markers = await getMarkersByTiles(provider, tiles)
 
       const api = mapApiRef.current
       if (!api) return
@@ -121,16 +78,16 @@ export default function MarkersFeature() {
     const api = mapApiRef.current
     if (!api) return
 
-    try {
-      const marker = await loadMarkerByLonLat(provider, lon, lat)
-      api.upsertSign(markerToSign(marker))
-    } catch (err) {
-      console.error('Failed to load marker:', err)
+    const marker = await getMarkerByLonLat(provider, lon, lat)
+    if (!marker) {
+      console.warn('Marker not found')
+      return
     }
+    api.upsertSign(markerToSign(marker))
   }
 
   return (
-    <div className="flex w-screen h-screen">
+    <div className="flex w-screen h-full">
       <div className="w-64 shadow-md z-10 p-4">
         <InstrumentPanel mapApiRef={mapApiRef} provider={provider} onMarkerUpdated={onMarkerUpdated}/>
       </div>

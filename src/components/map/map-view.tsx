@@ -31,7 +31,9 @@ export type MapSign = {
 export type MapViewApi = {
   upsertSign: (sign: MapSign) => void
   removeSign: (id: string) => void
+
   getCenter: () => [number, number]
+  translateToCenter: (lon: number, lat: number) => void
 
   startPicking: (lon: number, lat: number, onPick: (lon: number, lat: number) => void) => void
   stopPicking: () => void
@@ -193,6 +195,17 @@ export default function MapView({ apiRef, center, zoom, onViewportChanged }: Pro
         if (!c) return [0, 0]
         const [lon, lat] = toLonLat(c)
         return [lat, lon]
+      },
+
+      translateToCenter: (lon, lat) => {
+        const map = mapInstance.current
+        if (!map) return
+      
+        const view = map.getView()
+        view.animate({
+          center: fromLonLat([lon, lat]),
+          duration: 500, // ms
+        })
       },
 
       startPicking: (lon: number, lat: number, cb) => {

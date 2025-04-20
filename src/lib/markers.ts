@@ -1,6 +1,7 @@
 import { AnchorProvider } from '@coral-xyz/anchor'
 
 import * as zeeweg from '@project/anchor'
+import { PublicKey } from '@solana/web3.js'
 
 export interface Marker {
   description: zeeweg.MarkerDescription
@@ -35,7 +36,7 @@ export async function addMarker(provider: AnchorProvider, marker: Marker): Promi
   return sig
 }
 
-export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: number; y: number }[]): Promise<Marker[]> {
+export async function getMarkersByTiles(provider: AnchorProvider, tiles: { x: number; y: number }[]): Promise<Marker[]> {
   const program = zeeweg.getZeewegProgram(provider)
 
   // Step 1: Get PDAs for each tile
@@ -46,7 +47,6 @@ export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: n
 
   // Step 3: Extract all marker PDAs from those tiles
   const markerPdas = tileAccounts.flatMap(tile => tile?.markers ?? [])
-
   if (markerPdas.length === 0) return []
 
   // Step 4: Fetch marker entries
@@ -61,15 +61,39 @@ export async function getMarkersForTiles(provider: AnchorProvider, tiles: { x: n
     }))
 }
 
-export async function loadMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<Marker> {
+export async function getMarkersByAuthor(provider: AnchorProvider, pubkey: PublicKey): Promise<Marker[]> {
+  const program = zeeweg.getZeewegProgram(provider)
+
+  // Step 1: Get PDA for author public key
+  const authorPda = zeeweg.getMarkerAuthorPda(program, pubkey)
+
+  // Step 2: Fetch author account (can be null)
+  const authorAccount = await program.account.markerAuthor.fetchNullable(authorPda)
+  if (!authorAccount) return []
+
+  // Step 3: Extract all marker PDAs from the author account
+  const markerPdas = authorAccount?.markers ?? []
+  if (markerPdas.length === 0) return []
+
+  // Step 4: Fetch marker entries
+  const markerEntries = await program.account.markerEntry.fetchMultiple(markerPdas)
+
+  // Step 5: Combine entries with decoded positions
+  return markerEntries
+    .filter((entry): entry is zeeweg.MarkerEntry => !!entry)
+    .map((entry) => ({
+      description: entry.description,
+      position: entry.position,
+    }))
+}
+
+export async function getMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<Marker | null> {
   const program = zeeweg.getZeewegProgram(provider)
 
   const entryPda = zeeweg.getMarkerEntryPda(program, { lat, lon })
 
-  const markerAccount = await program.account.markerEntry.fetch(entryPda)
-  if (!markerAccount) {
-    throw new Error('Marker not found')
-  }
+  const markerAccount = await program.account.markerEntry.fetchNullable(entryPda)
+  if (!markerAccount) return null
 
   return {
     description: markerAccount.description as zeeweg.MarkerDescription,
