@@ -21,7 +21,7 @@ This is a list of tasks for POC Demo.
 - [ ] `marker editor` improve UI to distinguish between 'new marker' or 'edit' 🐞#bug  
 - [ ] `marker panel` Implement Filters ✨#feature  
   - [ ] Name  
-  - [ ] Market Type  
+  - [ ] Marker Type  
 - [ ] Refresh the map (and marker panel) 🐞#bug  
   - [ ] on validator change
   - [ ] on validator disconnect/connect
