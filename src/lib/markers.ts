@@ -8,24 +8,38 @@ export interface Marker {
   position: zeeweg.Position
 }
 
-export async function addMarker(provider: AnchorProvider, marker: Marker): Promise<string> {
+export async function upsertMarker(provider: AnchorProvider, marker: Marker, isNew: boolean): Promise<string> {
   const program = zeeweg.getZeewegProgram(provider)
 
+  // Step 1: Get PDAs for the marker entry and tile
   const entryPda = zeeweg.getMarkerEntryPda(program, marker.position)
 
   const tileX = Math.floor(marker.position.lat / zeeweg.MARKER_TILE_RESOLUTION)
   const tileY = Math.floor(marker.position.lon / zeeweg.MARKER_TILE_RESOLUTION)
   const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
 
-  const sig = await program.methods
-    .addMarker(marker.description, marker.position)
-    .accounts({
-      author: provider.wallet.publicKey,
-      markerEntry: entryPda,
-      markerTile: tilePda,
-    } as any)
-    .rpc()
+  const accounts = {
+    author: provider.wallet.publicKey,
+    markerEntry: entryPda,
+    markerTile: tilePda,
+  } as any
 
+  let sig = ''
+  if (isNew) {
+    // Step 2a: Create a new marker
+    sig = await program.methods
+      .addMarker(marker.description, marker.position)
+      .accounts(accounts)
+      .rpc()
+  } else {
+    // Step 2b: Update an existing marker
+    sig = await program.methods
+      .updateMarker(marker.description, marker.position)
+      .accounts(accounts)
+      .rpc()
+  }
+
+  // Step 3: Confirm the transaction
   const latestBlockHash = await provider.connection.getLatestBlockhash();
   await provider.connection.confirmTransaction({
     blockhash: latestBlockHash.blockhash,
@@ -35,6 +49,38 @@ export async function addMarker(provider: AnchorProvider, marker: Marker): Promi
 
   return sig
 }
+
+export async function deleteMarker(provider: AnchorProvider, marker: Marker): Promise<string> {
+  const program = zeeweg.getZeewegProgram(provider)
+
+  // Step 1: Get PDAs for the marker entry and tile
+  const entryPda = zeeweg.getMarkerEntryPda(program, marker.position)
+
+  const tileX = Math.floor(marker.position.lat / zeeweg.MARKER_TILE_RESOLUTION)
+  const tileY = Math.floor(marker.position.lon / zeeweg.MARKER_TILE_RESOLUTION)
+  const tilePda = zeeweg.getMarkerTilePda(program, tileX, tileY)
+
+  // Step 2: Delete the marker
+  const sig = await program.methods
+    .deleteMarker(marker.position)
+    .accounts({
+      author: provider.wallet.publicKey,
+      markerEntry: entryPda,
+      markerTile: tilePda,
+    })
+    .rpc()
+
+  // Step 3: Confirm the transaction
+  const latestBlockHash = await provider.connection.getLatestBlockhash();
+  await provider.connection.confirmTransaction({
+    blockhash: latestBlockHash.blockhash,
+    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+    signature: sig,
+  });
+
+  return sig
+}
+
 
 export async function getMarkersByTiles(provider: AnchorProvider, tiles: { x: number; y: number }[]): Promise<Marker[]> {
   const program = zeeweg.getZeewegProgram(provider)
@@ -78,7 +124,6 @@ export async function getMarkersByAuthor(provider: AnchorProvider, pubkey: Publi
   // Step 4: Fetch marker entries
   const markerEntries = await program.account.markerEntry.fetchMultiple(markerPdas)
 
-  // Step 5: Combine entries with decoded positions
   return markerEntries
     .filter((entry): entry is zeeweg.MarkerEntry => !!entry)
     .map((entry) => ({
@@ -90,8 +135,10 @@ export async function getMarkersByAuthor(provider: AnchorProvider, pubkey: Publi
 export async function getMarkerByLonLat(provider: AnchorProvider, lon: number, lat: number): Promise<Marker | null> {
   const program = zeeweg.getZeewegProgram(provider)
 
-  const entryPda = zeeweg.getMarkerEntryPda(program, { lat, lon })
+  // Step 1: Get PDA for the marker entry
+  const entryPda = zeeweg.getMarkerEntryPda(program, { lon, lat })
 
+  // Step 2: Fetch marker entry account (can be null)
   const markerAccount = await program.account.markerEntry.fetchNullable(entryPda)
   if (!markerAccount) return null
 

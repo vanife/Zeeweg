@@ -19,12 +19,13 @@ type MarkerTypeName = (typeof markerTypeNames)[number]
 
 export type MarkerEditorProps = {
   marker: Marker
+  isNewMarker: boolean
   onCancel: () => void
   onSave: (marker: Marker) => void
-  onDelete?: () => void
+  onDelete: (marker: Marker) => void
 }
 
-export default function MarkerEditor({ marker, onCancel, onSave, onDelete }: MarkerEditorProps) {
+export default function MarkerEditor({ marker, isNewMarker, onCancel, onSave, onDelete }: MarkerEditorProps) {
   const [draft, setDraft] = useState(marker)
 
   useEffect(() => {
@@ -34,10 +35,11 @@ export default function MarkerEditor({ marker, onCancel, onSave, onDelete }: Mar
     }))
   }, [marker.position])
 
-  const canDelete = !!onDelete
+  const canDelete = !isNewMarker
   const canSave =
     draft.description.name.trim().length > 0 &&
-    (draft.position.lat !== 0 || draft.position.lon !== 0)
+    (draft.position.lat !== 0 || draft.position.lon !== 0) &&
+    (isNewMarker || (draft.description.name !== marker.description.name || draft.description.details !== marker.description.details))
   const selectedType = Object.keys(draft.description.markerType)[0] as MarkerTypeName
 
   return (
@@ -124,7 +126,7 @@ export default function MarkerEditor({ marker, onCancel, onSave, onDelete }: Mar
       {canDelete && (
         <button
           className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          onClick={onDelete}
+          onClick={() => onDelete(marker)}
         >
           Delete
         </button>

@@ -12,7 +12,7 @@ import { Settings } from '@/lib/settings'
 import MapView, { MapViewApi } from '../map/map-view'
 import { useAnchorProvider } from '../solana/solana-provider'
 import InstrumentPanel from './markers-panel'
-import { markerToSign } from '@/components/map/map-markers'
+import { getMarkerIdFromPosition, markerToSign } from '@/components/map/map-markers'
 
 const MAX_TILES_TO_LOAD = 512
 
@@ -78,6 +78,7 @@ export default function MarkersFeature() {
     const api = mapApiRef.current
     if (!api) return
 
+    // Reload marker from the provider
     const marker = await getMarkerByLonLat(provider, lon, lat)
     if (!marker) {
       console.warn('Marker not found')
@@ -86,10 +87,19 @@ export default function MarkersFeature() {
     api.upsertSign(markerToSign(marker))
   }
 
+  const onMarkerDeleted = async (lon: number, lat: number) => {
+    const api = mapApiRef.current
+    if (!api) return
+
+    const id = getMarkerIdFromPosition({ lon, lat })
+
+    api.removeSign(id)
+  }
+
   return (
     <div className="flex w-screen h-full">
       <div className="w-64 shadow-md z-10 p-4">
-        <InstrumentPanel mapApiRef={mapApiRef} provider={provider} onMarkerUpdated={onMarkerUpdated}/>
+        <InstrumentPanel mapApiRef={mapApiRef} provider={provider} onMarkerUpdated={onMarkerUpdated} onMarkerDeleted={onMarkerDeleted}/>
       </div>
       <div className="flex-grow">
         <MapView

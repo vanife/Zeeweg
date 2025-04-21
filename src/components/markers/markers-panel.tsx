@@ -6,23 +6,25 @@ import { AnchorProvider } from '@coral-xyz/anchor'
 
 import MarkerEditor from './marker-editor'
 import type { MapViewApi } from '../map/map-view'
-import { addMarker, getMarkersByAuthor, Marker } from '@/lib/markers'
+import { upsertMarker as saveMarker, getMarkersByAuthor, Marker, deleteMarker } from '@/lib/markers'
 import { markerIconAndColorByType } from '@/components/map/map-markers'
 
 type Props = {
   mapApiRef: React.MutableRefObject<MapViewApi | null>
   provider: AnchorProvider
   onMarkerUpdated: (lon: number, lat: number) => void
+  onMarkerDeleted: (lon: number, lat: number) => void
 }
 
 enum PanelMode {
-  Idle,
+  ObserveMarkers,
   EditingMarker,
 }
 
-export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }: Props) {
-  const [mode, setMode] = useState<PanelMode>(PanelMode.Idle)
+export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, onMarkerDeleted }: Props) {
+  const [mode, setMode] = useState<PanelMode>(PanelMode.ObserveMarkers)
   const [initialMarker, setInitialMarker] = useState<Marker | null>(null)
+  const [isNewMarker, setIsNewMarker] = useState(false)
   const [createdMarkers, setCreatedMarkers] = useState<Marker[]>([])
 
   const enterCreateMode = () => {
@@ -39,6 +41,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }
       position: { lat: Math.round(lat * 1e6), lon: Math.round(lon * 1e6) },
     }
 
+    setIsNewMarker(true)
     setInitialMarker(newMarker)
     setMode(PanelMode.EditingMarker)
 
@@ -58,19 +61,34 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }
 
   const exitCreateMode = () => {
     mapApiRef.current?.stopPicking()
-    setMode(PanelMode.Idle)
+    setMode(PanelMode.ObserveMarkers)
     loadMyMarkers()
   }
 
-  const saveMarker = async (marker: Marker) => {
+  const saveMarkerImpl = async (marker: Marker) => {
     try {
-      await addMarker(provider, marker)
+      await saveMarker(provider, marker, isNewMarker)
+      toast.success('Marker saved')
+      onMarkerUpdated(marker.position.lon, marker.position.lat)
     } catch (err) {
-      toast.error('Could not add marker, error: ' + err)
+      toast.error('Failed to save marker')
+      console.error('Failed to add marker:', err)
     } finally {
       exitCreateMode()
-      toast.success('Marker added')
-      onMarkerUpdated(marker.position.lon, marker.position.lat)
+    }
+  }
+
+  const deleteMarkerImpl = async (marker: Marker) => {
+    try {
+      await deleteMarker(provider, marker)
+      toast.success('Marker deleted')
+      onMarkerDeleted(marker.position.lon, marker.position.lat)
+    } catch (err) {
+      toast.error('Failed to delete marker')
+      console.error('Failed to delete marker:', err)
+    }
+    finally {
+      exitCreateMode()
     }
   }
 
@@ -78,8 +96,12 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }
     const pubkey = provider.wallet.publicKey
     if (!pubkey) return // not connected
 
-    const all = await getMarkersByAuthor(provider, pubkey)
-    setCreatedMarkers(all)
+    try {
+      const all = await getMarkersByAuthor(provider, pubkey)
+      setCreatedMarkers(all)
+    } catch (err: any) {
+      toast.error('Failed to load markers: validator unavailable')
+    }
   }, [provider])
   
   useEffect(() => {
@@ -92,12 +114,14 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }
       return (
         <MarkerEditor
           marker={initialMarker}
+          isNewMarker={isNewMarker}
           onCancel={exitCreateMode}
-          onSave={saveMarker}
+          onSave={saveMarkerImpl}
+          onDelete={deleteMarkerImpl}
         />
       )
 
-    case PanelMode.Idle:
+    case PanelMode.ObserveMarkers:
     default:
       return (
         <div className="flex flex-col h-full space-y-4">
@@ -115,22 +139,39 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated }
           <div className="overflow-y-auto flex-1 space-y-2 pr-1 bg-black/20">
             {createdMarkers.map((marker, i) => {
               const [iconUrl] = markerIconAndColorByType(marker.description.markerType)
+
               return (
                 <div
                   key={i}
-                  className="flex items-center space-x-3 p-2 rounded bg-black/10 text-white"
+                  className="group flex items-center space-x-3 p-2 rounded bg-black/10 text-white hover:bg-black/20 transition"
                 >
                   <button
                     className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
                     onClick={() => {
-                      mapApiRef.current?.translateToCenter(marker.position.lon / 1e6, marker.position.lat / 1e6)
+                      mapApiRef.current?.translateToCenter(
+                        marker.position.lon / 1e6,
+                        marker.position.lat / 1e6
+                      )
                     }}
-                    >
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={iconUrl} alt="icon" className="w-4 h-4" />
                   </button>
 
-                  <span className="text-sm">{marker.description.name || '(Unnamed)'}</span>
+                  <span className="flex-1 text-sm truncate">
+                    {marker.description.name || '(Unnamed)'}
+                  </span>
+
+                  <button
+                    className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 transition"
+                    onClick={() => {
+                      setIsNewMarker(false)
+                      setInitialMarker(marker)
+                      setMode(PanelMode.EditingMarker)
+                    }}
+                  >
+                    Edit
+                  </button>
                 </div>
               )
             })}

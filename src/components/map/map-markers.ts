@@ -21,6 +21,10 @@ export function markerIconAndColorByType(type: object): [string, string] {
   }
 }
 
+export function getMarkerIdFromPosition(position: { lon: number; lat: number }): string {
+  return `${position.lon}_${position.lat}`
+}
+
 export function markerToSign(marker: Marker): MapSign {
   const lat = marker.position.lat / 1e6
   const lon = marker.position.lon / 1e6
@@ -29,7 +33,7 @@ export function markerToSign(marker: Marker): MapSign {
   let [iconUrl, color] = markerIconAndColorByType(type)
 
   return {
-    id: `${lat}_${lon}`,
+    id: getMarkerIdFromPosition(marker.position),
     name: marker.description.name,
     description: marker.description.details,
     iconUrl,
