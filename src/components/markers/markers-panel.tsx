@@ -8,6 +8,7 @@ import MarkerEditor from './marker-editor'
 import type { MapViewApi } from '../map/map-view'
 import { upsertMarker as saveMarker, getMarkersByAuthor, Marker, deleteMarker } from '@/lib/markers'
 import { markerIconAndColorByType } from '@/components/map/map-markers'
+import { IconEdit, IconTrash } from '@tabler/icons-react'
 
 type Props = {
   mapApiRef: React.MutableRefObject<MapViewApi | null>
@@ -125,7 +126,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
     default:
       return (
         <div className="flex flex-col h-full space-y-4">
-          <h2 className="text-lg font-semibold">Markers</h2>
+          <h2 className="text-lg font-semibold">Markers:</h2>
 
           <button
             className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-blue-700 transition"
@@ -134,11 +135,11 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
             Add New
           </button>
 
-          <h2 className="text-lg font-semibold">Created markers</h2>
+          <h2 className="text-lg font-semibold">My markers</h2>
 
           <div className="overflow-y-auto flex-1 space-y-2 pr-1 bg-black/20">
             {createdMarkers.map((marker, i) => {
-              const [iconUrl] = markerIconAndColorByType(marker.description.markerType)
+              const [iconUrl, color] = markerIconAndColorByType(marker.description.markerType)
 
               return (
                 <div
@@ -147,6 +148,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                 >
                   <button
                     className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                    style={{backgroundColor: color}}
                     onClick={() => {
                       mapApiRef.current?.translateToCenter(
                         marker.position.lon / 1e6,
@@ -155,7 +157,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                     }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={iconUrl} alt="icon" className="w-4 h-4" />
+                    <img src={iconUrl} alt="icon" className="w-4 h-4"/>
                   </button>
 
                   <span className="flex-1 text-sm truncate">
@@ -170,9 +172,18 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                       setMode(PanelMode.EditingMarker)
                     }}
                   >
-                    Edit
+                    <IconEdit size={16} />
                   </button>
-                </div>
+
+                  <button
+                    className="text-xs px-2 py-1 bg-red-500 hover:bg-white/20 rounded opacity-0 group-hover:opacity-100 transition"
+                    onClick={() => {
+                      deleteMarkerImpl(marker)
+                    }}
+                  >
+                    <IconTrash size={16} />
+                  </button>
+                  </div>
               )
             })}
           </div>
