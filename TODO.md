@@ -18,13 +18,12 @@ This is a list of tasks for POC Demo.
 ## UI / UX
 
 ### Backlog
-- [ ] `marker panel` Implement Filters ✨#feature  
+- [ ] `marker panel` Implement Filters ✨#feature
   - [ ] Name  
-  - [ ] Marker Type  
-- [ ] Refresh the map (and marker panel) 🐞#bug  
+- [ ] Refresh the map (and marker panel) 🐞#bug
   - [ ] on validator change
   - [ ] on validator disconnect/connect
-- [ ] `marker panel` TBC: Show `all` markers (not just `own` account) ✨#feature  
+- [ ] `marker panel` TBC: Show `all` markers (not just `own` account) ✨#feature
   - [ ] Implement load of all markers  
   - [ ] Improve UI to highlight own vs rest
   - [ ] add Filter for "only own" markers
@@ -33,11 +32,12 @@ This is a list of tasks for POC Demo.
 
 ### Completed ✓
 - [x] finalise UI for CRUD operations ✨#feature @MishkaRogachev  
-  - [x] Edit  
-  - [x] Delete  
-- [x] `marker panel` Implement `delete` action from the list ✨#feature @vanos  
-- [x] `marker editor` improve UI to distinguish between 'new marker' or 'edit' 🐞#bug  
-- [x] `marker panel` Implement vertical scrolling for the panel only ✨#feature @vanos  
+  - [x] Edit
+  - [x] Delete
+- [x] `marker panel` Implement `filter` for Marker Type @leo
+- [x] `marker panel` Implement `delete` action from the list ✨#feature @vanos
+- [x] `marker editor` improve UI to distinguish between 'new marker' or 'edit' 🐞#bug
+- [x] `marker panel` Implement vertical scrolling for the panel only ✨#feature @vanos
 
 
 ## Solana / Middleware

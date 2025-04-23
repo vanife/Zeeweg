@@ -168,7 +168,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
           <div>
             <label className="block text-sm font-semibold mb-1">Filter by Type</label>
             <select
-              className="w-full px-2 py-1 rounded bg-white text-black mb-2"
+              className="w-full px-2 py-1 rounded mb-2"
               value={filterType}
               onChange={e => setFilterType(e.target.value)}
             >
@@ -182,7 +182,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
           </div>
 
           <div className="overflow-y-auto flex-1 space-y-2 pr-1 bg-black/20">
-            {filteredMarkers.length > 0 ? (          
+            {filteredMarkers.length > 0 ? (
               filteredMarkers.map((marker, i) => {
                 const [iconUrl, color] = markerIconAndColorByType(marker.description.markerType)
                 const isOwner = marker.author?.toBase58() === provider.wallet.publicKey?.toBase58()
@@ -194,19 +194,21 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                   >
                   {/* Header Row */}
                   <div className="flex items-center space-x-2">
-                    <div
+                    <button
                       className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
                       style={{ backgroundColor: color }}
+                      onClick={() => centerMarker(marker)}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={iconUrl} alt="icon" className="w-4 h-4" />
-                    </div>
+                    </button>
 
                     <span className="text-sm font-semibold flex-1 truncate">
                       {marker.description.name || '(Unnamed)'}
                     </span>
 
-                    {isOwner && <span className="text-xs text-white/50">🛡️ owned</span>}
+                    {/* TODO: syc markers with map */}
+                    {/* {isOwner && <span className="text-xs text-white/50">🛡️ owned</span>} */}
                   </div>
 
                   {/* Description */}
@@ -221,7 +223,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                       <IconThumbUp size={14} />
                       <span>{marker.likes}</span>
                     </button>
-                    <button className="hover:text-white transition flex items-center space-x-1">
+                    <button className="hover:text-white transition flex flex-1 items-center space-x-1">
                       <IconThumbDown size={14} />
                       {/* TODO: dislikes */}
                       <span>0</span>
@@ -260,7 +262,5 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
             </div>
           </div>
       )
-
-    
   }
 }
