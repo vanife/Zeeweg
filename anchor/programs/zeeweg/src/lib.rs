@@ -32,4 +32,8 @@ pub mod zeeweg {
     pub fn delete_marker(ctx: Context<DeleteMarker>, position: state::Position) -> Result<()> {
         instructions::delete_marker(ctx, position)
     }
+
+    pub fn like_marker(ctx: Context<LikeMarker>) -> Result<()> {
+        instructions::like_marker(ctx)
+    }
 }

@@ -283,6 +283,31 @@ export type Zeeweg = {
       ]
     },
     {
+      "name": "likeMarker",
+      "discriminator": [
+        60,
+        159,
+        176,
+        137,
+        65,
+        28,
+        65,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "markerEntry",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "updateMarker",
       "discriminator": [
         166,
@@ -493,6 +518,10 @@ export type Zeeweg = {
           {
             "name": "updatedAt",
             "type": "i64"
+          },
+          {
+            "name": "likes",
+            "type": "u64"
           }
         ]
       }
@@ -582,6 +611,7 @@ export type Zeeweg = {
         "",
         "For example, given:",
         "lat = 43160889 (43.160889°)",
+        "",
         "lon = -2934364 (-2.934364°)",
         "and resolution = 100_000,",
         "the resulting tile will be:",
