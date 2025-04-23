@@ -146,7 +146,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
     case PanelMode.ObserveMarkers:
     default:
       return (
-        <div className="flex flex-col h-full space-y-4">
+        <div className="flex flex-col h-full space-y-2">
           <h2 className="text-lg font-semibold">Markers:</h2>
 
           <button
@@ -156,7 +156,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
             Add New
           </button>
 
-          <div className="overflow-y-auto flex-1 space-y-2 pr-1 bg-black/20">
+          <div className="overflow-y-auto flex-1 space-y-1 p-1 bg-black/20 rounded">
           {createdMarkers.map((marker, i) => {
             const [iconUrl, color] = markerIconAndColorByType(marker.description.markerType)
             const isOwner = marker.author?.toBase58() === provider.wallet.publicKey?.toBase58()
@@ -196,11 +196,13 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                     <IconThumbUp size={14} />
                     <span>{marker.likes}</span>
                   </button>
-                  <button className="hover:text-white transition flex items-center space-x-1">
+                  <button disabled className="hover:text-white transition flex items-center space-x-1">
                     <IconThumbDown size={14} />
                     {/* TODO: dislikes */}
                     <span>0</span>
                   </button>
+
+                  <div className="flex-grow"></div>
 
                   {isOwner && (
                     <>
@@ -212,14 +214,14 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
                           setMode(PanelMode.EditingMarker)
                         }}
                       >
-                        <IconEdit size={14} />
+                        <IconEdit size={14} className="hover:text-sky-600"/>
                       </button>
 
                       <button
                         className="hover:text-white transition flex items-center space-x-1"
                         onClick={() => deleteMarkerImpl(marker)}
                       >
-                        <IconTrash size={14} />
+                        <IconTrash size={14} className="hover:text-red-600"/>
                       </button>
                     </>
                   )}
