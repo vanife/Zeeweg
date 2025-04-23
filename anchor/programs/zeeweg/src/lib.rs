@@ -5,7 +5,7 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
-declare_id!("HGY1cAiRYbgAcCFpSU9cYw21wpj9gVgWERpo8RRTeZdu");
+declare_id!("6wRUFVKfxz3PeKdgjwRG7M9VWVwfvMSwVsXGdSEftdMd");
 
 use instructions::*;
 
@@ -35,5 +35,9 @@ pub mod zeeweg {
 
     pub fn like_marker(ctx: Context<LikeMarker>) -> Result<()> {
         instructions::like_marker(ctx)
+    }
+
+    pub fn dislike_marker(ctx: Context<LikeMarker>) -> Result<()> {
+        instructions::dislike_marker(ctx)
     }
 }

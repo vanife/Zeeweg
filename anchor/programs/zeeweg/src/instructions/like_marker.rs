@@ -15,6 +15,12 @@ pub struct LikeMarker<'info> {
 
 pub fn like_marker(ctx: Context<LikeMarker>) -> Result<()> {
     let marker = &mut ctx.accounts.marker_entry;
-    marker.likes += 1; // Increment the likes count
+    marker.likes += 1;
+    Ok(())
+}
+
+pub fn dislike_marker(ctx: Context<LikeMarker>) -> Result<()> {
+    let marker = &mut ctx.accounts.marker_entry;
+    marker.dislikes += 1;
     Ok(())
 }

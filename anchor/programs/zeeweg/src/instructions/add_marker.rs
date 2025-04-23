@@ -63,6 +63,7 @@ pub fn add_marker(
     marker_entry.description = description;
     marker_entry.position = position;
     marker_entry.likes = 0;
+    marker_entry.dislikes = 0;
     marker_entry.created_at = now;
     marker_entry.updated_at = now;
 

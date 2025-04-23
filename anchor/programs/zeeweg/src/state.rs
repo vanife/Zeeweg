@@ -55,7 +55,8 @@ pub struct MarkerEntry {
     pub position: Position,
     pub created_at: i64,
     pub updated_at: i64,
-    pub likes: u64, // New field to track likes
+    pub likes: u64,
+    pub dislikes: u64,
 }
 
 /// MarkerTile is a PDA that stores mapping tile -> markers.
@@ -91,8 +92,9 @@ macro_rules! marker_entry_space {
         std::mem::size_of::<MarkerType>() +     // marker_type
         std::mem::size_of::<Position>() +       // position
         8 +                                     // created_at: i64
-         8 +                                    // updated_at: i64
-        8                                       // likes: u64
+        8 +                                     // updated_at: i64
+        8 +                                     // likes: u64
+        8                                       // dislikes: u64
     };
 }
 

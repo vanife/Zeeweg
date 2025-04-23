@@ -6,7 +6,7 @@ import { AnchorProvider } from '@coral-xyz/anchor'
 
 import MarkerEditor from './marker-editor'
 import type { MapViewApi } from '../map/map-view'
-import { upsertMarker as saveMarker, getMarkersByAuthor, Marker, deleteMarker, likeMarker } from '@/lib/markers'
+import { upsertMarker as saveMarker, getMarkersByAuthor, Marker, deleteMarker, likeMarker, dislikeMarker } from '@/lib/markers'
 import { markerIconAndColorByType } from '@/components/map/map-markers'
 import { IconEdit, IconTrash, IconThumbUp, IconThumbDown } from '@tabler/icons-react'
 
@@ -41,6 +41,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
       },
       position: { lat: Math.round(lat * 1e6), lon: Math.round(lon * 1e6) },
       likes: 0,
+      dislikes: 0,
       author: provider.wallet.publicKey,
     }
 
@@ -106,6 +107,17 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
     }
   }
 
+  const dislikeMarkerImpl = async (marker: Marker) => {
+    try {
+      await dislikeMarker(provider, marker)
+      toast.success('Marker disliked')
+      loadMyMarkers() // Refresh the markers to update the like count
+    } catch (err) {
+      toast.error('Failed to dislike marker')
+      console.error('Failed to dislike marker:', err)
+    }
+  }
+
   const loadMyMarkers = useCallback(async () => {
     const pubkey = provider.wallet.publicKey
     if (!pubkey) return // not connected
@@ -117,7 +129,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
       toast.error('Failed to load markers: validator unavailable')
     }
   }, [provider])
-  
+
   const centerMarker = async (marker: Marker) => {
     mapApiRef.current?.translateToCenter(
       marker.position.lon / 1e6,
@@ -140,6 +152,7 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
           onSave={saveMarkerImpl}
           onDelete={deleteMarkerImpl}
           onLike={likeMarkerImpl}
+          onDislike={dislikeMarkerImpl}
         />
       )
 
@@ -157,80 +170,80 @@ export default function InstrumentPanel({ mapApiRef, provider, onMarkerUpdated, 
           </button>
 
           <div className="overflow-y-auto flex-1 space-y-1 p-1 bg-black/20 rounded">
-          {createdMarkers.map((marker, i) => {
-            const [iconUrl, color] = markerIconAndColorByType(marker.description.markerType)
-            const isOwner = marker.author?.toBase58() === provider.wallet.publicKey?.toBase58()
+            {createdMarkers.map((marker, i) => {
+              const [iconUrl, color] = markerIconAndColorByType(marker.description.markerType)
+              const isOwner = marker.author?.toBase58() === provider.wallet.publicKey?.toBase58()
 
-            return (
-              <div
-                key={i}
-                className="group space-y-1 p-2 rounded bg-black/10 text-white hover:bg-black/20 transition"
-              >
-                {/* Header Row */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    className="w-8 h-8 rounded flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: color }}
-                    onClick={() => centerMarker(marker)}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={iconUrl} alt="icon" className="w-4 h-4" />
-                  </button>
+              return (
+                <div
+                  key={i}
+                  className="group space-y-1 p-2 rounded bg-black/10 text-white hover:bg-black/20 transition"
+                >
+                  {/* Header Row */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      className="w-8 h-8 rounded flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: color }}
+                      onClick={() => centerMarker(marker)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={iconUrl} alt="icon" className="w-4 h-4" />
+                    </button>
 
-                  <span className="text-sm font-semibold flex-1 truncate">
-                    {marker.description.name || '(Unnamed)'}
-                  </span>
+                    <span className="text-sm font-semibold flex-1 truncate">
+                      {marker.description.name || '(Unnamed)'}
+                    </span>
 
-                  {isOwner && <span className="text-xs text-white/50">🛡️ owned</span>}
+                    {isOwner && <span className="text-xs text-white/50">🛡️ owned</span>}
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-xs text-white/70 line-clamp-2">{marker.description.details}</p>
+
+                  {/* Action Row */}
+                  <div className="flex items-center space-x-2 text-white/80 text-sm mt-1">
+                    <button
+                      className="hover:text-white transition flex items-center space-x-1"
+                      onClick={() => likeMarkerImpl(marker)}
+                    >
+                      <IconThumbUp size={14} />
+                      <span>{marker.likes}</span>
+                    </button>
+                    <button className="hover:text-white transition flex items-center space-x-1"
+                      onClick={() => dislikeMarkerImpl(marker)}>
+                      <IconThumbDown size={14} />
+                      <span>{marker.dislikes}</span>
+                    </button>
+
+                    <div className="flex-grow"></div>
+
+                    {isOwner && (
+                      <>
+                        <button
+                          className="hover:text-white transition flex items-center space-x-1 ml-auto"
+                          onClick={() => {
+                            setIsNewMarker(false)
+                            setInitialMarker(marker)
+                            setMode(PanelMode.EditingMarker)
+                          }}
+                        >
+                          <IconEdit size={14} className="hover:text-sky-600"/>
+                        </button>
+
+                        <button
+                          className="hover:text-white transition flex items-center space-x-1"
+                          onClick={() => deleteMarkerImpl(marker)}
+                        >
+                          <IconTrash size={14} className="hover:text-red-600"/>
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-
-                {/* Description */}
-                <p className="text-xs text-white/70 line-clamp-2">{marker.description.details}</p>
-
-                {/* Action Row */}
-                <div className="flex items-center space-x-2 text-white/80 text-sm mt-1">
-                  <button
-                    className="hover:text-white transition flex items-center space-x-1"
-                    onClick={() => likeMarkerImpl(marker)}
-                  >
-                    <IconThumbUp size={14} />
-                    <span>{marker.likes}</span>
-                  </button>
-                  <button disabled className="hover:text-white transition flex items-center space-x-1">
-                    <IconThumbDown size={14} />
-                    {/* TODO: dislikes */}
-                    <span>0</span>
-                  </button>
-
-                  <div className="flex-grow"></div>
-
-                  {isOwner && (
-                    <>
-                      <button
-                        className="hover:text-white transition flex items-center space-x-1 ml-auto"
-                        onClick={() => {
-                          setIsNewMarker(false)
-                          setInitialMarker(marker)
-                          setMode(PanelMode.EditingMarker)
-                        }}
-                      >
-                        <IconEdit size={14} className="hover:text-sky-600"/>
-                      </button>
-
-                      <button
-                        className="hover:text-white transition flex items-center space-x-1"
-                        onClick={() => deleteMarkerImpl(marker)}
-                      >
-                        <IconTrash size={14} className="hover:text-red-600"/>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
-      </div>
-    )
+      )
   }
 }

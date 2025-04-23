@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-zeeweg = "HGY1cAiRYbgAcCFpSU9cYw21wpj9gVgWERpo8RRTeZdu"
+zeeweg = "6wRUFVKfxz3PeKdgjwRG7M9VWVwfvMSwVsXGdSEftdMd"
 
 [registry]
 url = "https://api.apr.dev"

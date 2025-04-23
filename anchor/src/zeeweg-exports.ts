@@ -51,6 +51,7 @@ export interface MarkerEntry {
   createdAt: BN
   updatedAt: BN
   likes: BN
+  dislikes: BN
 }
 
 // MarkerEntry PDA depends on the position (lat, lon)

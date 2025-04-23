@@ -24,9 +24,10 @@ export type MarkerEditorProps = {
   onSave: (marker: Marker) => void
   onDelete: (marker: Marker) => void
   onLike: (marker: Marker) => void
+  onDislike: (marker: Marker) => void
 }
 
-export default function MarkerEditor({ marker, isNewMarker, onCancel, onSave, onDelete, onLike }: MarkerEditorProps) {
+export default function MarkerEditor({ marker, isNewMarker, onCancel, onSave, onDelete }: MarkerEditorProps) {
   const [draft, setDraft] = useState(marker)
 
   useEffect(() => {

@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/zeeweg.json`.
  */
 export type Zeeweg = {
-  "address": "HGY1cAiRYbgAcCFpSU9cYw21wpj9gVgWERpo8RRTeZdu",
+  "address": "6wRUFVKfxz3PeKdgjwRG7M9VWVwfvMSwVsXGdSEftdMd",
   "metadata": {
     "name": "zeeweg",
     "version": "0.1.0",
@@ -283,6 +283,31 @@ export type Zeeweg = {
       ]
     },
     {
+      "name": "dislikeMarker",
+      "discriminator": [
+        237,
+        194,
+        84,
+        197,
+        196,
+        142,
+        160,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "author",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "markerEntry",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "likeMarker",
       "discriminator": [
         60,
@@ -521,6 +546,10 @@ export type Zeeweg = {
           },
           {
             "name": "likes",
+            "type": "u64"
+          },
+          {
+            "name": "dislikes",
             "type": "u64"
           }
         ]
